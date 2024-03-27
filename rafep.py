@@ -16,7 +16,7 @@ def truncate(Traj,Energy,Threshold):
 
 
 # 1D RAFEP
-def PartFunc_RAFEP1D(Traj,Energy,beta):
+def partfunc_RAFEP1D(Traj,Energy,beta):
     # calculate the partition function using RAFEP theory
     Emax = np.max(Energy)
     Avg = np.mean(np.exp(beta*(Energy-Emax))) * np.exp(beta*Emax)
@@ -35,7 +35,7 @@ def PartFunc_RAFEP1D(Traj,Energy,beta):
 
 
 # 2D RAFEP
-def PartFunc_RAFEP2D(Traj,Energy,beta):
+def partfunc_RAFEP2D(Traj,Energy,beta):
     # calculate the partition function using RAFEP theory
     Emax = np.max(Energy)
     Avg = np.mean(np.exp(beta*(Energy-Emax))) * np.exp(beta*Emax)

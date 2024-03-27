@@ -5,7 +5,7 @@ from scipy import optimize
 
 class PotentialFunction1D:
     # abstract base class, no __init__
-    def partition_integral(self,upper,lower,dx,beta):
+    def partfunc_integral(self,upper,lower,dx,beta):
         # calculate the partition function via integration
         ndim = round((upper-lower)/dx)
         Energy = []
@@ -122,7 +122,7 @@ class ASymDW1D(PotentialFunction1D):
 
 class PotentialFunction2D:
     # abstract base class, no __init__
-    def partition_integral(self,upper,lower,dx,beta):
+    def partfunc_integral(self,upper,lower,dx,beta):
         # calculate the partition function via integration
         ndim = round((upper-lower)/dx)
         Energy = []

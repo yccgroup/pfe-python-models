@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
+
 import sys
+import argparse
 import numpy as np
 
 import config
@@ -10,20 +13,20 @@ from util import log, error
 from trajectory import *
 
 
-def usage():
-    print(f"Usage: {sys.argv[0]} <inputfile>")
-
-
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        usage()
-        sys.exit(1)
 
-    # read the configuration file
-    inputfile = sys.argv[1]
-    cfg = config.Config(inputfile)
+    # parse arguments
+    p = argparse.ArgumentParser(description="Generate samples and estimate Z.")
+    p.add_argument('inputfile',
+        help='name of the input file')
+    p.add_argument('--param', '-p', metavar='P', action='append', default=[],
+        help='override parameter from the input file; syntax: section.setting=value')
+    args = p.parse_args()
 
-    # set the randoms seed
+    # read the configuration file, and apply command line settings
+    cfg = config.Config(args.inputfile, args.param)
+
+    # set the random seed
     try:
         seed = cfg.input.getint('trajectory', 'seed')
         np.random.seed(seed)

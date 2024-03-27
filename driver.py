@@ -8,9 +8,9 @@ from trajectory import *
 
 
 def run_MC(cfg):
-    nsteps   = cfg.input.getint('trajectory', 'nsteps')
-    stepsize = cfg.input.getfloat('trajectory', 'stepsize')
-    outfreq  = cfg.input.getint('trajectory', 'outfreq')
+    nsteps   = cfg.getint('trajectory', 'nsteps')
+    stepsize = cfg.getfloat('trajectory', 'stepsize')
+    outfreq  = cfg.getint('trajectory', 'outfreq')
 
     if isinstance(cfg.pot, potentials.PotentialFunction1D):
         sampling_func = sampling.MCSampling1D
@@ -25,14 +25,14 @@ def run_MC(cfg):
 
 
 def run_REMC(cfg):
-    nsteps   = cfg.input.getint('trajectory', 'nsteps')
-    stepsize = cfg.input.getfloat('trajectory', 'stepsize')
-    outfreq  = cfg.input.getint('trajectory', 'outfreq')
-    nreplica = cfg.input.getint('trajectory', 'nreplica')
-    kB       = cfg.input.getfloat('trajectory', 'kB')
-    temp_min = cfg.input.getfloat('trajectory', 'temp')
-    temp_max = cfg.input.getfloat('trajectory', 'temp-max')
-    exfreq   = cfg.input.getint('trajectory', 'exfreq')
+    nsteps   = cfg.getint('trajectory', 'nsteps')
+    stepsize = cfg.getfloat('trajectory', 'stepsize')
+    outfreq  = cfg.getint('trajectory', 'outfreq')
+    nreplica = cfg.getint('trajectory', 'nreplica')
+    kB       = cfg.getfloat('trajectory', 'kB')
+    temp_min = cfg.getfloat('trajectory', 'temp')
+    temp_max = cfg.getfloat('trajectory', 'temp-max')
+    exfreq   = cfg.getint('trajectory', 'exfreq')
 
     # current REMC can only support even number of replicas
     if nreplica % 2 != 0:
@@ -100,9 +100,9 @@ def run_REMC(cfg):
 
 def run_RAFEP(cfg, samples):
     if isinstance(cfg.pot, potentials.PotentialFunction1D):
-        rafep_func = rafep.PartFunc_RAFEP1D
+        rafep_func = rafep.partfunc_RAFEP1D
     elif isinstance(cfg.pot, potentials.PotentialFunction2D):
-        rafep_func = rafep.PartFunc_RAFEP2D
+        rafep_func = rafep.partfunc_RAFEP2D
     Z,lnZ = rafep_func(samples.traj, samples.energies, cfg.beta)
     return Z,lnZ
 
