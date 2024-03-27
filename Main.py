@@ -1,6 +1,4 @@
 import sys
-import os
-import subprocess
 import numpy as np
 
 import config
@@ -8,30 +6,12 @@ import potentials
 import sampling
 import rafep
 import driver
+from util import log, error
 from trajectory import *
 
 
 def usage():
     print(f"Usage: {sys.argv[0]} <inputfile>")
-
-
-def error(msg, rc=1):
-    sys.stdout.write(f"ERROR: {msg}\n")
-    sys.exit(rc)
-
-
-def log(msg=''):
-    print(msg)
-
-
-def get_git_revision():
-    try:
-        return subprocess.check_output(
-            ['git', 'log', '--pretty=tformat:%h (%ai)'],
-            cwd = os.path.dirname(os.path.realpath(__file__))
-            ).decode('ascii').strip()
-    except OSError:
-        return 'N/A'
 
 
 if __name__ == '__main__':
@@ -56,14 +36,16 @@ if __name__ == '__main__':
     if method == 'monte-carlo':
         samples = driver.run_MC(cfg)
     elif method == 'replica-exchange':
-        error("TODO")
+        samples = driver.run_REMC(cfg)
     else:
         error(f"unknown method '{method}'")
     samples.save()
 
     # Statistics
-    log(f"Acceptance rate = {samples.acceptratio}")
-    log(f"Average energy  = {np.mean(samples.energies)}")
+    nsteps = cfg.input.getint('trajectory', 'nsteps')
+    log(f"Acceptance rate = {samples.naccept/nsteps}")
+    log(f"Average energy  = {samples.energy_mean()}")
+    log(f"Minimum energy  = {samples.energy_min()}")
     log(f"0.5 * kB * T    = {0.5/cfg.beta}")
     log()
 
@@ -73,9 +55,10 @@ if __name__ == '__main__':
 
     # remove the sampling outliers
     threshold = cfg.input.getfloat('rafep', 'threshold')
-    trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, threshold)
-    trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj)/samples.nsamples)
-    log(f"Truncated samples, threshold={threshold}, kept {100*trunc_samples.acceptratio}%")
+    E_cut = threshold/cfg.beta + samples.energy_min()
+    trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
+    trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
+    log(f"Truncated samples, threshold={threshold}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
 
     # run RAFEP again
     Z,lnZ = driver.run_RAFEP(cfg, trunc_samples)
