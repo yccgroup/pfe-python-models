@@ -3,7 +3,7 @@
 
 import numpy as np
 
-def Truncate(Traj,Energy,Threshold):
+def truncate(Traj,Energy,Threshold):
     # truncate the trajectory and energy over the Threshold
     NewTraj = []
     NewEnergy = []
@@ -16,7 +16,7 @@ def Truncate(Traj,Energy,Threshold):
 
 
 # 1D RAFEP
-def Partition_RAFEP1D(Traj,Energy,beta):
+def PartFunc_RAFEP1D(Traj,Energy,beta):
     # calculate the partition function using RAFEP theory
     Emax = np.max(Energy)
     Avg = np.mean(np.exp(beta*(Energy-Emax))) * np.exp(beta*Emax)
@@ -35,7 +35,7 @@ def Partition_RAFEP1D(Traj,Energy,beta):
 
 
 # 2D RAFEP
-def Partition_RAFEP2D(Traj,Energy,beta):
+def PartFunc_RAFEP2D(Traj,Energy,beta):
     # calculate the partition function using RAFEP theory
     Emax = np.max(Energy)
     Avg = np.mean(np.exp(beta*(Energy-Emax))) * np.exp(beta*Emax)
@@ -50,5 +50,4 @@ def Partition_RAFEP2D(Traj,Energy,beta):
     lnZ = np.log(V0) - np.log(np.mean(np.exp(beta*(Energy-Emax)))) - beta*Emax
 
     return Z, lnZ
-
 

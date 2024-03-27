@@ -37,6 +37,9 @@ class Harmonic1D(PotentialFunction1D):
         lnZ = np.log(Zexact)
         return Z, lnZ
 
+    def xinit(self):
+        return self.x0
+
 
 class DW1D(PotentialFunction1D):
     # 1D double well potential
@@ -48,31 +51,37 @@ class DW1D(PotentialFunction1D):
     def __call__(self,x):
         return self.a * x**2 - self.b * x**3 + self.c * x**4
 
+    def xinit(self):
+        return 0.0
+
 
 class SymDW1D(PotentialFunction1D):
     # symmetric 1D double well potential
-    # minima are at 0 and a, barrier height is h
-    def __init__(self,a,h):
-        self.a = a
+    # minima are at 0 and x0, barrier height is h
+    def __init__(self,x0,h):
+        self.x0 = x0
         self.h = h
-        self.c = 16*h/a**4
+        self.c = 16*h/x0**4
 
     def __call__(self,x):
-        return self.c * x**2 * (x-self.a)**2
+        return self.c * x**2 * (x-self.x0)**2
+
+    def xinit(self):
+        return 0.0
 
 
 class ASymDW1D(PotentialFunction1D):
     # asymmetric 1D double well potential
-    # minima are at x=0,y=0 and x=a,y=v
+    # minima are at x=0,y=0 and x=x0,y=v
     # maximum is at y=h
     # --> find a,b,c numerically
-    def __init__(self,a,v,h):
-        self.find_params(a,v,h)
+    def __init__(self,x0,v,h):
+        self.find_params(x0,v,h)
         self.a = self.sol.x[1]
         self.b = self.sol.x[2]
         self.c = self.sol.x[3]
 
-    def find_params(self,a,v,h):
+    def find_params(self,x0,v,h):
         # sanity checks
         if h<v:
             raise ValueError(f"barrier h={h} lower than 2nd minimum v={v}")
@@ -84,17 +93,17 @@ class ASymDW1D(PotentialFunction1D):
         def pot1(x,a,b,c):
             return 2*a * x - 3*b * x**2 + 4*c * x**3
         # parameters to optimize:
-        # x[0] = position of maximum
-        # x[1] = a
-        # x[2] = b
-        # x[3] = c
-        def fun(x):
-            return [ pot(x[0], x[1], x[2], x[3]) - h,
-                     pot1(x[0], x[1], x[2], x[3]),
-                     pot(a, x[1], x[2], x[3]) - v,
-                     pot1(a, x[1], x[2], x[3]) ]
+        # p[0] = position of maximum
+        # p[1] = a
+        # p[2] = b
+        # p[3] = c
+        def fun(p):
+            return [ pot(p[0], p[1], p[2], p[3]) - h,
+                     pot1(p[0], p[1], p[2], p[3]),
+                     pot(x0, p[1], p[2], p[3]) - v,
+                     pot1(x0, p[1], p[2], p[3]) ]
         # initial guess
-        init = [ a/2, 1.0, 1.0, 1.0 ]
+        init = [ x0/2, 1.0, 1.0, 1.0 ]
         # solve
         sol = optimize.root(fun, init)
         # check
@@ -104,6 +113,10 @@ class ASymDW1D(PotentialFunction1D):
 
     def __call__(self,x):
         return self.a * x**2 - self.b * x**3 + self.c * x**4
+
+    def xinit(self):
+        return 0.0
+
 
 # 2D potentials from here
 
@@ -142,5 +155,8 @@ class MuellerBrown(PotentialFunction2D):
         y = X[1]
         for i in range(4):
             V += self.A[i]*np.exp(self.a[i]*(x-self.x0[i])**2+self.b[i]*(x-self.x0[i])*(y-self.y0[i])+self.c[i]*(y-self.y0[i])**2)
-
         return 0.05*V
+
+    def xinit(self):
+        return [-0.6, 1.5]
+
