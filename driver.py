@@ -98,6 +98,12 @@ def run_REMC(cfg):
     return s_samples[0]
 
 
+def run_readtraj(cfg, it):
+    traj = np.loadtxt(f"Traj.dat")
+    energies = np.loadtxt(f"Energy.dat")
+    return MCTrajectory(traj, energies, len(traj))
+
+
 def run_RAFEP(cfg, samples):
     if isinstance(cfg.pot, potentials.PotentialFunction1D):
         rafep_func = rafep.partfunc_RAFEP1D

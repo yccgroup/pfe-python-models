@@ -17,6 +17,15 @@ from util import *
 from trajectory import *
 
 
+def set_seed(cfg, it):
+    seed_text = cfg.get('trajectory', 'seed')
+    try:
+        seed = int(seed_text)
+        np.random.seed(seed + it)
+    except ValueError:
+        np.random.seed()
+
+
 def run_once(cfg, it):
 
     # set output directory
@@ -27,35 +36,38 @@ def run_once(cfg, it):
     except FileExistsError:
         pass
     os.chdir(outdir)
-    fd = open("log", "w")
-
-    # set the random seed
-    try:
-        seed = cfg.input.getint('trajectory', 'seed')
-        np.random.seed(seed + it)
-    except ValueError:
-        np.random.seed()
 
     # generate the samples, depending on the selected method
     method = cfg.get('trajectory', 'method')
-    savetraj = cfg.getboolean('trajectory', 'save')
-    log(fd, f"Generating samples via {method}...")
-    if method == 'monte-carlo':
-        samples = driver.run_MC(cfg)
-    elif method == 'replica-exchange':
-        samples = driver.run_REMC(cfg)
-    else:
-        error(f"unknown method '{method}'")
-    if savetraj:
-        samples.save()
 
-    # Statistics
-    nsteps = cfg.getint('trajectory', 'nsteps')
-    log(fd, f"Acceptance rate = {samples.naccept/nsteps}")
-    log(fd, f"Average energy  = {samples.energy_mean()}")
-    log(fd, f"Minimum energy  = {samples.energy_min()}")
-    log(fd, f"0.5 * kB * T    = {0.5/cfg.beta}")
-    log(fd)
+    if method == 'read':
+        fd = open("log", "a")
+        log(fd, "-" * 64)
+        savetraj = False
+        log(fd, f"Reading samples...")
+        samples = driver.run_readtraj(cfg,it)
+
+    else:
+        fd = open("log", "w")
+        savetraj = cfg.getboolean('trajectory', 'save')
+        log(fd, f"Generating samples via {method}...")
+        set_seed(cfg, it)
+        if method == 'monte-carlo':
+            samples = driver.run_MC(cfg)
+        elif method == 'replica-exchange':
+            samples = driver.run_REMC(cfg)
+        else:
+            error(f"unknown method '{method}'")
+        if savetraj:
+            samples.save()
+
+        # Statistics
+        nsteps = cfg.getint('trajectory', 'nsteps')
+        log(fd, f"Acceptance rate = {samples.naccept/nsteps}")
+        log(fd, f"Average energy  = {samples.energy_mean()}")
+        log(fd, f"Minimum energy  = {samples.energy_min()}")
+        log(fd, f"0.5 * kB * T    = {0.5/cfg.beta}")
+        log(fd)
 
     # estimate Z via RAFEP (no threshold)
     Z = driver.run_RAFEP(cfg, samples)
@@ -67,7 +79,7 @@ def run_once(cfg, it):
         E_cut = threshold/cfg.beta + samples.energy_min()
         trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
         trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
-        log(fd, f"Truncating samples, threshold={threshold}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
+        log(fd, f"Truncating samples, threshold={threshold:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
         # run RAFEP again
         Z = driver.run_RAFEP(cfg, trunc_samples)
         Zs.append(Z)
