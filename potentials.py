@@ -31,10 +31,10 @@ class Harmonic1D(PotentialFunction1D):
     def __call__(self,x):
         return 0.5 * self.k * (x-self.x0)**2
 
-    def partition_exact(self,beta):
+    def partfunc_exact(self,beta):
         # calculate the exact partition function (available only in harmonic oscillator potential)
         Z = np.sqrt(2*np.pi/(self.k*beta))
-        lnZ = np.log(Zexact)
+        lnZ = np.log(Z)
         return Z, lnZ
 
     def xinit(self):

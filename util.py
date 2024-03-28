@@ -3,8 +3,8 @@ import os
 import subprocess
 
 
-def log(msg=''):
-    print(msg)
+def log(fd, msg=''):
+    fd.write(msg + "\n")
 
 
 def error(msg, rc=1):
@@ -15,7 +15,7 @@ def error(msg, rc=1):
 def get_git_revision():
     try:
         return subprocess.check_output(
-            ['git', 'log', '--pretty=tformat:%h (%ai)'],
+            ['git', 'log', '-n1', '--pretty=tformat:%h (%ai)'],
             cwd = os.path.dirname(os.path.realpath(__file__))
             ).decode('ascii').strip()
     except OSError:

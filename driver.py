@@ -104,5 +104,21 @@ def run_RAFEP(cfg, samples):
     elif isinstance(cfg.pot, potentials.PotentialFunction2D):
         rafep_func = rafep.partfunc_RAFEP2D
     Z,lnZ = rafep_func(samples.traj, samples.energies, cfg.beta)
-    return Z,lnZ
+    return Z
+
+
+def run_exact(cfg):
+    if hasattr(cfg.pot, 'partfunc_exact'):
+        Z, lnZ = cfg.pot.partfunc_exact(cfg.beta)
+        return Z
+    else:
+        return None
+
+
+def run_integral(cfg):
+    lo = cfg.getfloat('integral', 'lower')
+    hi = cfg.getfloat('integral', 'upper')
+    dx = cfg.getfloat('integral', 'dx')
+    Zint, lnZint = cfg.pot.partfunc_integral(hi, lo, dx, cfg.beta)
+    return Zint
 

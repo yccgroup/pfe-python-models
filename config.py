@@ -69,3 +69,14 @@ class Config:
             value = self.input.get(section, setting)
             error(f"setting '{section}.{setting}' must be a floating-point number, not '{value}'")
 
+    def getboolean(self, section, setting):
+        self.guard(section, setting)
+        try:
+            return self.input.getboolean(section, setting)
+        except ValueError:
+            value = self.input.get(section, setting)
+            error(f"setting '{section}.{setting}' must be a boolean, not '{value}'")
+
+    def write(self, fd):
+        self.input.write(fd)
+
