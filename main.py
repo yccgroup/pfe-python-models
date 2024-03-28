@@ -6,6 +6,7 @@ import argparse
 import numpy as np
 import multiprocessing
 import itertools
+from math import inf
 
 import config
 import potentials
@@ -49,34 +50,37 @@ def run_once(cfg, it):
         samples.save()
 
     # Statistics
-    nsteps = cfg.input.getint('trajectory', 'nsteps')
+    nsteps = cfg.getint('trajectory', 'nsteps')
     log(fd, f"Acceptance rate = {samples.naccept/nsteps}")
     log(fd, f"Average energy  = {samples.energy_mean()}")
     log(fd, f"Minimum energy  = {samples.energy_min()}")
     log(fd, f"0.5 * kB * T    = {0.5/cfg.beta}")
     log(fd)
 
-    # estimate Z via RAFEP
-    Z1 = driver.run_RAFEP(cfg, samples)
-    log(fd, f"RAFEP Zest = {Z1}")
+    # estimate Z via RAFEP (no threshold)
+    Z = driver.run_RAFEP(cfg, samples)
+    Zs = [Z]
+    log(fd, f"Z_est(inf) = {Z}")
 
     # remove the sampling outliers
-    threshold = cfg.input.getfloat('rafep', 'threshold')
-    E_cut = threshold/cfg.beta + samples.energy_min()
-    trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
-    trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
-    log(fd, f"Truncated samples, threshold={threshold}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
+    for threshold in cfg.thresholds:
+        E_cut = threshold/cfg.beta + samples.energy_min()
+        trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
+        trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
+        log(fd, f"Truncating samples, threshold={threshold}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
+        # run RAFEP again
+        Z = driver.run_RAFEP(cfg, trunc_samples)
+        Zs.append(Z)
+        log(fd, f"Z_est({threshold:.3f}) = {Z}")
 
-    # run RAFEP again
-    Z2 = driver.run_RAFEP(cfg, trunc_samples)
-    log(fd, f"Model Zest = {Z2}")
     fd.close()
- 
     os.chdir(origdir)
-    return Z1,Z2
+    return Zs
 
 
 if __name__ == '__main__':
+
+  try:
 
     # parse arguments
     p = argparse.ArgumentParser(description="Generate samples and estimate Z.")
@@ -98,6 +102,7 @@ if __name__ == '__main__':
     log(fd, "RAFEP for model potentials")
     log(fd, "-" * 64)
     log(fd, f"git-commit: {get_git_revision()}")
+    log(fd, f"program start: {timestamp()}")
     log(fd)
     log(fd, "-------- START INPUT --------")
     cfg.write(fd)
@@ -118,15 +123,22 @@ if __name__ == '__main__':
 
     # run sampling in parallel
     pool = multiprocessing.Pool(nproc)
-    Zest_list = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
-    Zest1 = [ res[0] for res in Zest_list ]
-    Zest2 = [ res[1] for res in Zest_list ]
+    Zest_data = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
 
     # output RAFEP results
-    np.savetxt("RAFEP_Zest.dat", Zest1)
-    np.savetxt("Model_Zest.dat", Zest2)
-    log(fd, f"RAFEP Z_est = {np.mean(Zest1)} ± {np.std(Zest1)}")
-    log(fd, f"RAFEP Z_est/Z_exact = {np.mean(Zest1)/Zexact} ± {np.std(Zest1)/Zexact}")
-    log(fd, f"Model Z_est = {np.mean(Zest2)} ± {np.std(Zest2)}")
-    log(fd, f"Model Z_est/Z_exact = {np.mean(Zest2)/Zexact} ± {np.std(Zest2)/Zexact}")
+    thresholds = [inf] + cfg.thresholds
+    for i,threshold in enumerate(thresholds):
+        Zest = [ Zs[i] for Zs in Zest_data ]
+        np.savetxt(f"Zest_{threshold:.3f}.dat", Zest)
+        log(fd, f"Z_est({threshold:.3f}) = {np.mean(Zest)} ± {np.std(Zest)}")
+        log(fd, f"Z_est({threshold:.3f})/Z_exact = {np.mean(Zest)/Zexact} ± {np.std(Zest)/Zexact}")
+
+    log(fd)
+    log(fd, f"program end: {timestamp()}")
+    log(fd, "-" * 64)
+
+  except AppError as e:
+
+    sys.stdout.write(f"ERROR: {e.msg}\n")
+    sys.exit(1)
 

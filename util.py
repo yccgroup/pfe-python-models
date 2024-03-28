@@ -1,15 +1,20 @@
 import sys
 import os
 import subprocess
+from datetime import datetime,timezone
+
+
+class AppError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
 
 
 def log(fd, msg=''):
     fd.write(msg + "\n")
 
 
-def error(msg, rc=1):
-    sys.stdout.write(f"ERROR: {msg}\n")
-    sys.exit(rc)
+def error(msg):
+    raise AppError(msg)
 
 
 def get_git_revision():
@@ -21,3 +26,7 @@ def get_git_revision():
     except OSError:
         return 'N/A'
 
+
+def timestamp():
+    now = datetime.now(timezone.utc).astimezone()
+    return now.strftime('%F %T %z')
