@@ -151,6 +151,6 @@ if __name__ == '__main__':
 
   except AppError as e:
 
-    sys.stdout.write(f"ERROR: {e.msg}\n")
+    sys.stderr.write(f"ERROR: {e.msg}\n")
     sys.exit(1)
 
