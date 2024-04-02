@@ -23,7 +23,7 @@ def get_git_revision():
             ['git', 'log', '-n1', '--pretty=tformat:%h (%ai)'],
             cwd = os.path.dirname(os.path.realpath(__file__))
             ).decode('ascii').strip()
-    except OSError:
+    except:
         return 'N/A'
 
 
