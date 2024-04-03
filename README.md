@@ -20,12 +20,22 @@ This code is a sample implementation of the RAFEP method for simple
 
 The code is written in Python 3 and depends on the packages `numpy`
 and `scipy`.  If your Python install does not include them, you can
-create a virtual environment and install them via `pip`:
+create a conda environment and install them.
 
-    python3 -m venv venv
-    . venv/bin/activate
-    pip3 install -r requirements.txt
+install:
 
+    conda create -n py3
+    conda activate py3
+    conda install python=3 numpy scipy
+
+
+when using:
+
+    conda activate py3
+
+when done:
+
+    conda deactivate
 
 ## Running the Code
 
