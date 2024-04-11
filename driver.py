@@ -2,7 +2,7 @@ from itertools import cycle
 
 import potentials
 import sampling
-import rafep
+import pfe
 from util import error
 from trajectory import *
 
@@ -104,12 +104,12 @@ def run_readtraj(cfg, it):
     return MCTrajectory(traj, energies, len(traj))
 
 
-def run_RAFEP(cfg, samples):
+def run_PFE(cfg, samples):
     if isinstance(cfg.pot, potentials.PotentialFunction1D):
-        rafep_func = rafep.partfunc_RAFEP1D
+        pfe_func = pfe.partfunc1D
     elif isinstance(cfg.pot, potentials.PotentialFunction2D):
-        rafep_func = rafep.partfunc_RAFEP2D
-    Z,lnZ = rafep_func(samples.traj, samples.energies, cfg.beta)
+        pfe_func = pfe.partfunc2D
+    Z,lnZ = pfe_func(samples.traj, samples.energies, cfg.beta)
     return Z
 
 

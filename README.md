@@ -1,19 +1,19 @@
-# RAFEP Python Models
+# PFE Python Models
 
-This code is a sample implementation of the RAFEP method for simple
+This code is a sample implementation of the PFE method for simple
 1D or 2D model potentials.  The code performs the following:
 
 - Collect a number of samples from the canonical distribution of
   the given potential function, via Monte-Carlo or Replica-Exchange.
 - Estimate the value of the partition function Z (at the given
-  temperature) from the collected sample, via the RAFEP method.
+  temperature) from the collected sample, via the PFE method.
 - To remove the effect of sampling outliers, multiple values of
-  the RAFEP energy threshold can be specified.
-- The sampling and RAFEP estimation is performed multiple times,
-  in order to estimate the error of the RAFEP estimate.
+  the PFE energy threshold can be specified.
+- The sampling and PFE estimation is performed multiple times,
+  in order to estimate the error of the PFE estimate.
 - The actual value of Z is also calculated analytically (where
   possible) and numerically, so that one can verify the correctness
-  of the RAFEP result.
+  of the PFE result.
 
 
 ## Prerequisites
@@ -67,8 +67,8 @@ directory.
 ### `[meta]` section
 
 * `nloop` is the number of sampling iterations, i.e. how many times the
-  sampling and RAFEP evaluation are performed.  The statistical fluctuation
-  of the result is used to estimate the RAFEP error.
+  sampling and PFE evaluation are performed.  The statistical fluctuation
+  of the result is used to estimate the PFE error.
 * `nproc` is the number of parallel processes to use. Each process
   performs one sampling iteration. You can set this e.g. to the number
   of CPU cores in your machine.
@@ -124,11 +124,11 @@ If RE is used, also the following parameters are needed:
 * `exfreq`: replicas are exchanged every `exfreq` MC steps
 
 
-### `[rafep]` section
+### `[pfe]` section
 
-* `threshold`: for the RAFEP evaluation, samples with energy larger than `threshold * kB * temp`
+* `threshold`: for the PFE evaluation, samples with energy larger than `threshold * kB * temp`
   are discarded. This can either be a single number, or a comma-separated list of numbers, in
-  which case the RAFEP evaluation is performed for each of the listed thresholds in turn.
+  which case the PFE evaluation is performed for each of the listed thresholds in turn.
 
 
 ## Output
@@ -141,20 +141,20 @@ The main output (written to standard output) contains the following information:
   overridden with the `--param` options).
 * `Z_int`: the value of Z obtained by numerical integration
 * `Z_exact`: the analytic value of Z (where available)
-* `Z_est(t)`: the RAFEP estimate for threshold `t`, in the form `mean ± std`
+* `Z_est(t)`: the PFE estimate for threshold `t`, in the form `mean ± std`
    where the mean and standard deviation (std) are obtained from the multiple
-   iterations.  `t=inf` refers to the RAFEP estimate that is based on *all*
+   iterations.  `t=inf` refers to the PFE estimate that is based on *all*
    samples without discarding any outliers.
-* `Z_est(t)/Z_exact`: the ratio of the RAFEP estimate and the "exact" value,
+* `Z_est(t)/Z_exact`: the ratio of the PFE estimate and the "exact" value,
   which is either the analytic value or the numeric value.
 
 Additionally, each sampling iteration creates a subdirectory `out-0000` etc,
 containing the following files:
 
-* `log` records some basic statistics for the MC/RE sampling, as well as the RAFEP
-  estimation of Z for this sample and the given thresholds. `Z_est(inf)` is the RAFEP
+* `log` records some basic statistics for the MC/RE sampling, as well as the PFE
+  estimation of Z for this sample and the given thresholds. `Z_est(inf)` is the PFE
   estimation without removing any outliers (i.e. technically with threshold = infinity)
-  while `Z_est(t)` is the RAFEP estimation for threshold value `t`.
+  while `Z_est(t)` is the PFE estimation for threshold value `t`.
 * If `save = yes` was given in the `[trajectory]` section:
   * `Traj.dat` contains the samples, one per line (space-separated coordinates).
   * `Energy.dat` contains the potential energy for the samples, one per line.
@@ -162,16 +162,16 @@ containing the following files:
 ## Reading in saved samples
 
 It is also possible to read in existing samples, e.g. if you want to try out
-additional values for the RAFEP threshold without having to re-do the
+additional values for the PFE threshold without having to re-do the
 (potentially time-consuming) sampling.  To do so, use `method = read` in
 the `[trajectory]` section. You also need to specify the `temp` and `kB` parameters.
 
 In this mode, the per-iteration `log` file is not overwritten. Instead, the
-new RAFEP estimates are appended to it.
+new PFE estimates are appended to it.
 
-For example, to run just the RAFEP estimate with threshold values 5.0 and 6.0
+For example, to run just the PFE estimate with threshold values 5.0 and 6.0
 based on existing samples that had been generated from input file `input.conf`,
 you can run (make sure not to overwrite your original output file!)
 
-    ./main.py -p trajectory.method=read -p rafep.threshold=5.0,6.0 input.conf | tee output2.log
+    ./main.py -p trajectory.method=read -p pfe.threshold=5.0,6.0 input.conf | tee output2.log
 

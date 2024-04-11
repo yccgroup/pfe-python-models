@@ -11,7 +11,7 @@ from math import inf
 import config
 import potentials
 import sampling
-import rafep
+import pfe
 import driver
 from util import *
 from trajectory import *
@@ -69,19 +69,19 @@ def run_once(cfg, it):
         log(fd, f"0.5 * kB * T    = {0.5/cfg.beta}")
         log(fd)
 
-    # estimate Z via RAFEP (no threshold)
-    Z = driver.run_RAFEP(cfg, samples)
+    # estimate Z via PFE (no threshold)
+    Z = driver.run_PFE(cfg, samples)
     Zs = [Z]
     log(fd, f"Z_est(inf) = {Z}")
 
     # remove the sampling outliers
     for threshold in cfg.thresholds:
         E_cut = threshold/cfg.beta + samples.energy_min()
-        trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
+        trunc_traj, trunc_energies = pfe.truncate(samples.traj, samples.energies, E_cut)
         trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
         log(fd, f"Truncating samples, threshold={threshold:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
-        # run RAFEP again
-        Z = driver.run_RAFEP(cfg, trunc_samples)
+        # run PFE again
+        Z = driver.run_PFE(cfg, trunc_samples)
         Zs.append(Z)
         log(fd, f"Z_est({threshold:.3f}) = {Z}")
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
 
     # generate output
     fd = sys.stdout
-    log(fd, "RAFEP for model potentials")
+    log(fd, "PFE for model potentials")
     log(fd, "-" * 64)
     log(fd, f"git-commit: {get_git_revision()}")
     log(fd, f"program start: {timestamp()}")
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     pool = multiprocessing.Pool(nproc)
     Zest_data = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
 
-    # output RAFEP results
+    # output PFE results
     thresholds = [inf] + cfg.thresholds
     for i,threshold in enumerate(thresholds):
         Zest = [ Zs[i] for Zs in Zest_data ]

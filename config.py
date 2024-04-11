@@ -30,7 +30,7 @@ class Config:
         kB = self.getfloat('trajectory', 'kB')
         T  = self.getfloat('trajectory', 'temp')
         self.beta = 1.0/(kB*T)
-        threshold_text = self.get('rafep', 'threshold')
+        threshold_text = self.get('pfe', 'threshold')
         self.thresholds = [ float(t) for t in threshold_text.split(",") ]
         # instantiate the potential function object
         func = self.get('potential', 'func')

@@ -15,9 +15,9 @@ def truncate(Traj,Energy,Threshold):
     return NewTraj, NewEnergy
 
 
-# 1D RAFEP
-def partfunc_RAFEP1D(Traj,Energy,beta):
-    # calculate the partition function using RAFEP theory
+# 1D PFE
+def partfunc1D(Traj,Energy,beta):
+    # calculate the partition function using PFE theory
     Emax = np.max(Energy)
     Avg = np.mean(np.exp(beta*(Energy-Emax))) * np.exp(beta*Emax)
     # calculate V0 via histogram (for general potentials)
@@ -34,9 +34,9 @@ def partfunc_RAFEP1D(Traj,Energy,beta):
     return Z, lnZ
 
 
-# 2D RAFEP
-def partfunc_RAFEP2D(Traj,Energy,beta):
-    # calculate the partition function using RAFEP theory
+# 2D PFE
+def partfunc2D(Traj,Energy,beta):
+    # calculate the partition function using PFE theory
     Emax = np.max(Energy)
     Avg = np.mean(np.exp(beta*(Energy-Emax))) * np.exp(beta*Emax)
     # calculate V0 via histogram (for general potentials)
