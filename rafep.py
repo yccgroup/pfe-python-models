@@ -15,6 +15,41 @@ def truncate(Traj,Energy,Threshold):
     return NewTraj, NewEnergy
 
 
+def autotruncate(Traj,Energy):
+    # automatically truncate the trajectory and energy when probability is too small
+    NewTraj = []
+    NewEnergy = []
+
+    # output the energy histogram (for later debug)
+    Eupper = int(np.max(Energy))+1
+    Elower = int(np.min(Energy))
+    nbins = Eupper - Elower + 1
+    counts, Evalues = np.histogram(Energy,range=(Elower,Eupper+1),bins=nbins)
+    outdata = np.column_stack((Evalues[0:-1],counts))
+    np.savetxt("histogram.dat",outdata,fmt="%.10f %d")
+    
+    # find most probable energy (not avg) and the associated cutoff
+    mpindex = np.argmax(counts)
+    print("Most probable E:",Evalues[mpindex])
+    work = counts-cutoff*counts[mpindex]
+    major = []
+    for i in range(len(work)):
+        if work[i] >= 0.0:
+            major.append(i)
+    
+    Elower_cutoff = Evalues[major[0]]
+    Eupper_cutoff = Evalues[major[-1]]
+    print("Avg:",np.mean(Energy),"Std:",np.std(Energy),"Elower_cutoff:",Elower_cutoff,"Eupper_cutoff:",Eupper_cutoff)
+    
+    # truncate the energy and trajectory
+    for x, e in zip(Traj,Energy):
+        if e >= Elower_cutoff and e <= Eupper_cutoff:
+            NewTraj.append(x)
+            NewEnergy.append(e)
+    
+    return NewTraj, NewEnergy
+        
+
 # 1D RAFEP
 def partfunc_RAFEP1D(Traj,Energy,beta):
     # calculate the partition function using RAFEP theory

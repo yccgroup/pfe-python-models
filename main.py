@@ -77,7 +77,8 @@ def run_once(cfg, it):
     # remove the sampling outliers
     for threshold in cfg.thresholds:
         E_cut = threshold/cfg.beta + samples.energy_min()
-        trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
+        #trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
+        trunc_traj, trunc_energies = rafep.autotruncate(samples.traj, samples.energies)
         trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
         log(fd, f"Truncating samples, threshold={threshold:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
         # run RAFEP again
