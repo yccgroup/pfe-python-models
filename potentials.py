@@ -20,6 +20,15 @@ class PotentialFunction1D:
 
         return Z, lnZ
 
+    def calcpot(self,upper,lower,dx,beta):
+        # calculate the potential curve
+        ndim = round((upper-lower)/dx)
+        Data = []
+        for i in range(ndim):
+            x = lower + i*dx
+            Data.append([x,self(x)*beta])
+
+        return Data
 
 
 class Harmonic1D(PotentialFunction1D):
@@ -138,6 +147,18 @@ class PotentialFunction2D:
 
         return Z, lnZ
 
+    def calcpot(self,upper,lower,dx,beta): 
+        # calculate the potential surface
+        ndim = round((upper-lower)/dx)
+        Data = []
+        for i in range(ndim):
+            x = lower + i*dx
+            for j in range(ndim):
+                y = lower + j*dx
+                Data.append([x,y,self([x,y])*beta])
+
+        return Data 
+
 
 class MuellerBrown(PotentialFunction2D):
     # 2D Mueller Brown potential
@@ -159,4 +180,56 @@ class MuellerBrown(PotentialFunction2D):
 
     def xinit(self):
         return [-0.6, 1.5]
+
+
+# Main program for printing out the potential
+if __name__ == '__main__':
+
+    import config
+    import sys
+    import os
+    import argparse
+    
+    from util import *
+
+    try:
+        # parse arguments
+        p = argparse.ArgumentParser(description="Generate samples and estimate Z.")
+        p.add_argument('inputfile',
+            help='name of the input file')
+        p.add_argument('--param', '-p', metavar='P', action='append', default=[],
+            help='override parameter from the input file; syntax: section.setting=value')
+        args = p.parse_args()
+
+        # read the configuration file, and apply command line settings
+        cfg = config.Config(args.inputfile, args.param)
+
+        # read meta parameters
+        nproc = cfg.getint('meta', 'nproc')
+        nloop = cfg.getint('meta', 'nloop')
+
+        # generate output
+        fd = sys.stdout
+        log(fd, "Model potentials")
+        log(fd, "-" * 64)
+        log(fd, f"git-commit: {get_git_revision()}")
+        log(fd, f"program start: {timestamp()}")
+        log(fd)
+        log(fd, "-------- START INPUT --------")
+        cfg.write(fd)
+        log(fd, "-------- END INPUT --------")
+        log(fd)
+
+        # print out the potential
+        lo = cfg.getfloat('integral', 'lower')
+        hi = cfg.getfloat('integral', 'upper')
+        dx = cfg.getfloat('integral', 'dx')
+
+        Data = cfg.pot.calcpot(hi, lo, dx, cfg.beta)
+        np.savetxt("pot.dat",Data)
+    
+    except AppError as e:
+
+        sys.stderr.write(f"ERROR: {e.msg}\n")
+        sys.exit(1)
 

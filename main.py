@@ -77,14 +77,22 @@ def run_once(cfg, it):
     # remove the sampling outliers
     for threshold in cfg.thresholds:
         E_cut = threshold/cfg.beta + samples.energy_min()
-        #trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
-        trunc_traj, trunc_energies = rafep.autotruncate(samples.traj, samples.energies)
+        trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
         trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
-        log(fd, f"Truncating samples, threshold={threshold:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
+        log(fd, f"Truncating samples, threshold={threshold:.3f}, E_cut={E_cut:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
         # run RAFEP again
         Z = driver.run_RAFEP(cfg, trunc_samples)
         Zs.append(Z)
         log(fd, f"Z_est({threshold:.3f}) = {Z}")
+
+    # remove the sampling outliers with an automatic approach
+    trunc_traj, trunc_energies, Elower_cut, Eupper_cut = rafep.autotruncate(samples.traj, samples.energies, cutoff=0.002, nbins=21)
+    trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
+    log(fd, f"Truncating samples, autotruncate, Elower_cut={Elower_cut:.3f}, Eupper_cut={Eupper_cut:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
+    # run RAFEP again
+    Z = driver.run_RAFEP(cfg, trunc_samples)
+    Zs.append(Z)
+    log(fd, f"Z_est(auto) = {Z}")
 
     fd.close()
     os.chdir(origdir)
@@ -145,6 +153,13 @@ if __name__ == '__main__':
         np.savetxt(f"Zest_{threshold:.3f}.dat", Zest)
         log(fd, f"Z_est({threshold:.3f}) = {np.mean(Zest)} ± {np.std(Zest)}")
         log(fd, f"Z_est({threshold:.3f})/Z_exact = {np.mean(Zest)/Zexact} ± {np.std(Zest)/Zexact}")
+
+
+    # output RAFEP autotruncate results
+    Zest = [ Zs[i+1] for Zs in Zest_data ]
+    np.savetxt(f"Zest_auto.dat", Zest)
+    log(fd, f"Z_est(auto) = {np.mean(Zest)} ± {np.std(Zest)}")
+    log(fd, f"Z_est(auto)/Z_exact = {np.mean(Zest)/Zexact} ± {np.std(Zest)/Zexact}")
 
     log(fd)
     log(fd, f"program end: {timestamp()}")
