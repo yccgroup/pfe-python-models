@@ -15,36 +15,28 @@ def truncate(Traj,Energy,Threshold):
     return NewTraj, NewEnergy
 
 
-def autotruncate(Traj,Energy,cutoff=0.001,nbins=21):
-    # automatically truncate the trajectory and energy when probability is too small
+def autotruncate(Traj,Energy,Threshold,bothends=False):
+    # truncate the trajectory and energy based on the probability threshold
     NewTraj = []
     NewEnergy = []
 
-    # output the energy histogram (for later debug)
-    Eupper = int(np.max(Energy))+1
-    Elower = int(np.min(Energy))
-    counts, Evalues = np.histogram(Energy,range=(Elower,Eupper+1),bins=nbins)
+    # find energy thresholds
+    Elower,Eupper = np.quantile(Energy, [Threshold,1-Threshold])
+    if not bothends:
+        Elower = -np.Inf
+
+    # truncate the Threshold % of the trajectories
+    for x,E in zip(Traj,Energy):
+        if (E <= Eupper) and (E >= Elower):
+            NewTraj.append(x)
+            NewEnergy.append(E)
+
+    # output the energy histogram for analysis 
+    counts, Evalues = np.histogram(Energy,range=(int(np.min(Energy)),int(np.max(Energy))+2),bins=21)
     outdata = np.column_stack((Evalues[0:-1],counts))
     np.savetxt("histogram.dat",outdata,fmt="%.10f %d")
     
-    # find most probable energy (not avg) and the associated cutoff
-    mpindex = np.argmax(counts)
-    work = counts-cutoff*counts[mpindex]
-    major = []
-    for i in range(len(work)):
-        if work[i] >= 0.0:
-            major.append(i)
-    
-    Elower_cutoff = Evalues[major[0]]
-    Eupper_cutoff = Evalues[major[-1]]
-    
-    # truncate the energy and trajectory
-    for x, e in zip(Traj,Energy):
-        if e >= Elower_cutoff and e <= Eupper_cutoff:
-            NewTraj.append(x)
-            NewEnergy.append(e)
-    
-    return NewTraj, NewEnergy, Elower_cutoff, Eupper_cutoff
+    return NewTraj, NewEnergy, Elower, Eupper
         
 
 # 1D RAFEP
