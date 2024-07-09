@@ -31,11 +31,6 @@ def autotruncate(Traj,Energy,Threshold,bothends=False):
             NewTraj.append(x)
             NewEnergy.append(E)
 
-    # output the energy histogram for analysis 
-    counts, Evalues = np.histogram(Energy,range=(int(np.min(Energy)),int(np.max(Energy))+2),bins=21)
-    outdata = np.column_stack((Evalues[0:-1],counts))
-    np.savetxt("histogram.dat",outdata,fmt="%.10f %d")
-    
     return NewTraj, NewEnergy, Elower, Eupper
         
 

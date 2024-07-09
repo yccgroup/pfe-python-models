@@ -69,6 +69,12 @@ def run_once(cfg, it):
         log(fd, f"0.5 * kB * T    = {0.5/cfg.beta}")
         log(fd)
 
+    # output the energy histogram for analysis
+    Emin = 0.0
+    counts, Evalues = np.histogram(samples.energies, range=(Emin, Emin + 12.0/cfg.beta), bins=24)
+    outdata = np.column_stack((Evalues[0:-1],counts))
+    np.savetxt("histogram.dat",outdata,fmt="%.10f %d")
+
     # estimate Z via RAFEP (no threshold)
     Z = driver.run_RAFEP(cfg, samples)
     Zs = [Z]
