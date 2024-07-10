@@ -176,7 +176,8 @@ class MuellerBrown(PotentialFunction2D):
         y = X[1]
         for i in range(4):
             V += self.A[i]*np.exp(self.a[i]*(x-self.x0[i])**2+self.b[i]*(x-self.x0[i])*(y-self.y0[i])+self.c[i]*(y-self.y0[i])**2)
-        return 0.05*V
+        #return 0.05*V
+        return V
 
     def xinit(self):
         return [-0.6, 1.5]
