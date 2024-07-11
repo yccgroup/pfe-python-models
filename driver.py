@@ -109,7 +109,8 @@ def run_RAFEP(cfg, samples):
         rafep_func = rafep.partfunc_RAFEP1D
     elif isinstance(cfg.pot, potentials.PotentialFunction2D):
         rafep_func = rafep.partfunc_RAFEP2D
-    Z,lnZ = rafep_func(samples.traj, samples.energies, cfg.beta)
+    nbins = cfg.getint('rafep', 'nbins')
+    Z,lnZ = rafep_func(samples.traj, samples.energies, cfg.beta, nbins)
     return Z
 
 
