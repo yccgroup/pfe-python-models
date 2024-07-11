@@ -1,27 +1,195 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
 <head>
-  <meta charset="utf-8">
-  <meta name="generator" content="pandoc">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title></title>
-  <style type="text/css">code{white-space: pre;}</style>
-  <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
-  <![endif]-->
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
 </head>
 <body>
 <h1 id="rafep-python-models">RAFEP Python Models</h1>
-<p>This code is a sample implementation of the RAFEP method for simple 1D or 2D model potentials. The code performs the following:</p>
+<p>This code is a sample implementation of the RAFEP method for simple
+1D or 2D model potentials. The code performs the following:</p>
 <ul>
-<li>Collect a number of samples from the canonical distribution of the given potential function, via Monte-Carlo or Replica-Exchange.</li>
-<li>Estimate the value of the partition function Z (at the given temperature) from the collected sample, via the RAFEP method.</li>
-<li>To remove the effect of sampling outliers, multiple values of the RAFEP energy threshold can be specified.</li>
-<li>The sampling and RAFEP estimation is performed multiple times, in order to estimate the error of the RAFEP estimate.</li>
-<li>The actual value of Z is also calculated analytically (where possible) and numerically, so that one can verify the correctness of the RAFEP result.</li>
+<li>Collect a number of samples from the canonical distribution of the
+given potential function, via Monte-Carlo or Replica-Exchange.</li>
+<li>Estimate the value of the partition function Z (at the given
+temperature) from the collected sample, via the RAFEP method.</li>
+<li>To remove the effect of sampling outliers, multiple values of the
+RAFEP energy threshold can be specified.</li>
+<li>The sampling and RAFEP estimation is performed multiple times, in
+order to estimate the error of the RAFEP estimate.</li>
+<li>The actual value of Z is also calculated analytically (where
+possible) and numerically, so that one can verify the correctness of the
+RAFEP result.</li>
 </ul>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>The code is written in Python 3 and depends on the packages <code>numpy</code> and <code>scipy</code>. If your Python install does not include them, you can create a conda environment and install them.</p>
+<p>The code is written in Python 3 and depends on the packages
+<code>numpy</code> and <code>scipy</code>. If your Python install does
+not include them, you can create a conda environment and install
+them.</p>
 <p>install:</p>
 <pre><code>conda create -n py3
 conda activate py3
@@ -31,86 +199,171 @@ conda install python=3 numpy scipy</code></pre>
 <p>when done:</p>
 <pre><code>conda deactivate</code></pre>
 <h2 id="running-the-code">Running the Code</h2>
-<p>To run the code, an input file is needed (see below). Then the code can be run via</p>
+<p>To run the code, an input file is needed (see below). Then the code
+can be run via</p>
 <pre><code>./main.py input.conf</code></pre>
-<p>The results are printed to standard output, therefore it is recommended to redirect it so that you have a record, e.g. via</p>
+<p>The results are printed to standard output, therefore it is
+recommended to redirect it so that you have a record, e.g. via</p>
 <pre><code>./main.py input.conf | tee output.log</code></pre>
-<p>It is possible to override parameters from the input file by adding the <code>--param</code> or <code>-p</code> option (which can be given multiple times). For example, to change the number of sampling loops to 1000, use</p>
+<p>It is possible to override parameters from the input file by adding
+the <code>--param</code> or <code>-p</code> option (which can be given
+multiple times). For example, to change the number of sampling loops to
+1000, use</p>
 <pre><code>./main.py --param meta.nloop=1000 input.conf</code></pre>
 <h2 id="input-file">Input File</h2>
-<p>The input file specifies all parameters and meta-parameters for the calculations. It is organized into sections, which are documented below.</p>
-<p>Some documented sample input files can be found in the <a href="./input/">input</a> directory.</p>
+<p>The input file specifies all parameters and meta-parameters for the
+calculations. It is organized into sections, which are documented
+below.</p>
+<p>Some documented sample input files can be found in the <a
+href="./input/">input</a> directory.</p>
 <h3 id="meta-section"><code>[meta]</code> section</h3>
 <ul>
-<li><code>nloop</code> is the number of sampling iterations, i.e. how many times the sampling and RAFEP evaluation are performed. The statistical fluctuation of the result is used to estimate the RAFEP error.</li>
-<li><code>nproc</code> is the number of parallel processes to use. Each process performs one sampling iteration. You can set this e.g. to the number of CPU cores in your machine.</li>
+<li><code>nloop</code> is the number of sampling iterations, i.e. how
+many times the sampling and RAFEP evaluation are performed. The
+statistical fluctuation of the result is used to estimate the RAFEP
+error.</li>
+<li><code>nproc</code> is the number of parallel processes to use. Each
+process performs one sampling iteration. You can set this e.g. to the
+number of CPU cores in your machine.</li>
 </ul>
 <h3 id="integral-section"><code>[integral]</code> section</h3>
-<p>This section specifies parameters for the numerical integration of the partition function.</p>
+<p>This section specifies parameters for the numerical integration of
+the partition function.</p>
 <ul>
 <li><code>lower</code> is the lower bound of the coordinate range</li>
 <li><code>upper</code> is the upper bound of the coordinate range</li>
 <li><code>dx</code> is the integration step size</li>
 </ul>
 <h3 id="potential-section"><code>[potential]</code> section</h3>
-<p>This section specifies which potential function to use, and its parameters. The mandatory parameter in this section is <code>func</code>, which is the name of the function. The available functions and their parameters are:</p>
+<p>This section specifies which potential function to use, and its
+parameters. The mandatory parameter in this section is
+<code>func</code>, which is the name of the function. The available
+functions and their parameters are:</p>
 <ul>
-<li><code>harmonic</code>: 1D harmonic oscillator</li>
+<li><code>harmonic</code>: 1D harmonic oscillator
+<ul>
 <li><code>k</code>: the force constant</li>
 <li><code>x0</code>: the equilibrium position</li>
-<li><code>double-well</code>: double well potential <code>a x^2 - b x^3 + c x^4</code></li>
-<li><code>a</code>, <code>b</code>, <code>c</code>: the coefficients</li>
-<li><code>double-well-sym</code>: symmetric double well potential; one minimum is at position x=0 with potential V=0</li>
+</ul></li>
+<li><code>double-well</code>: double well potential
+<code>a x^2 - b x^3 + c x^4</code>
+<ul>
+<li><code>a</code>, <code>b</code>, <code>c</code>: the
+coefficients</li>
+</ul></li>
+<li><code>double-well-sym</code>: symmetric double well potential; one
+minimum is at position x=0 with potential V=0
+<ul>
 <li><code>x0</code>: the position of the other minimum</li>
 <li><code>h</code>: the height of the barrier</li>
-<li><code>double-well-asym</code>: asymmetric double well potential; the parameters are as for <code>double-well-sym</code>, plus:</li>
+</ul></li>
+<li><code>double-well-asym</code>: asymmetric double well potential; the
+parameters are as for <code>double-well-sym</code>, plus:
+<ul>
 <li><code>v</code>: the height of the other minimum</li>
-<li><code>mueller-brown</code>: the 2D Mueller-Brown potential; there are no parameters.</li>
+</ul></li>
+<li><code>mueller-brown</code>: the 2D Mueller-Brown potential; there
+are no parameters.</li>
 </ul>
 <h3 id="trajectory-section"><code>[trajectory]</code> section</h3>
 <p>This section specifies how to collect the samples.</p>
 <ul>
-<li><code>method</code>: either <code>monte-carlo</code> (MC) or <code>replica-exchange</code> (RE)</li>
+<li><code>method</code>: either <code>monte-carlo</code> (MC) or
+<code>replica-exchange</code> (RE)</li>
 <li><code>temp</code>: the temperature parameter</li>
-<li><code>kB</code>: Boltzmann constant in your units of choice, e.g. <code>kB = 0.0019872</code> in kcal/mol/K</li>
-<li><code>seed</code>: if set to an integer, fix the random seed; for each sampling iteration, it will be increased by one; if set to a non-integer (e.g. <code>seed = none</code>) the seed will be initialized randomly.</li>
-<li><code>nsteps</code>: the number of MC steps (per replica, if RE is used)</li>
+<li><code>kB</code>: Boltzmann constant in your units of choice,
+e.g. <code>kB = 0.0019872</code> in kcal/mol/K</li>
+<li><code>seed</code>: if set to an integer, fix the random seed; for
+each sampling iteration, it will be increased by one; if set to a
+non-integer (e.g. <code>seed = none</code>) the seed will be initialized
+randomly.</li>
+<li><code>nsteps</code>: the number of MC steps (per replica, if RE is
+used)</li>
 <li><code>stepsize</code>: the MC step size</li>
-<li><code>outfreq</code>: a sample is collected every <code>outfreq</code> MC steps</li>
-<li><code>save</code>: whether to save the collected samples; <code>yes</code> or <code>no</code>.</li>
+<li><code>outfreq</code>: a sample is collected every
+<code>outfreq</code> MC steps</li>
+<li><code>save</code>: whether to save the collected samples;
+<code>yes</code> or <code>no</code>.</li>
 </ul>
 <p>If RE is used, also the following parameters are needed:</p>
 <ul>
 <li><code>nreplica</code>: the number of replicas</li>
-<li><code>temp-max</code>: the maximum temperature. The minimum temperature is taken from the <code>temp</code> parameter, and the replicas are equidistantly spaced in temperature.</li>
-<li><code>exfreq</code>: replicas are exchanged every <code>exfreq</code> MC steps</li>
+<li><code>temp-max</code>: the maximum temperature. The minimum
+temperature is taken from the <code>temp</code> parameter, and the
+replicas are equidistantly spaced in temperature.</li>
+<li><code>exfreq</code>: replicas are exchanged every
+<code>exfreq</code> MC steps</li>
 </ul>
 <h3 id="rafep-section"><code>[rafep]</code> section</h3>
 <ul>
-<li><code>threshold</code>: for the RAFEP evaluation, samples with energy larger than <code>threshold * kB * temp</code> are discarded. This can either be a single number, or a comma-separated list of numbers, in which case the RAFEP evaluation is performed for each of the listed thresholds in turn.</li>
+<li><code>nbins</code>: the number of bins used (per dimension) for
+estimating the configuration space covered during the sampling</li>
+<li><code>threshold</code>: for the RAFEP evaluation, a fraction of
+samples with the highest energies are discarded. <code>threshold</code>
+specifies this fraction, e.g. <code>0.01</code> for 1%. This can either
+be a single number, or a comma-separated list of numbers, in which case
+the RAFEP evaluation is performed for each of the listed thresholds in
+turn.</li>
 </ul>
 <h2 id="output">Output</h2>
-<p>The main output (written to standard output) contains the following information:</p>
+<p>The main output (written to standard output) contains the following
+information:</p>
 <ul>
 <li>Hash and date of the Git commit of the running code.</li>
 <li>Program start and end time.</li>
-<li>A copy of all input file settings (taking into account any settings overridden with the <code>--param</code> options).</li>
-<li><code>Z_int</code>: the value of Z obtained by numerical integration</li>
+<li>A copy of all input file settings (taking into account any settings
+overridden with the <code>--param</code> options).</li>
+<li><code>Z_int</code>: the value of Z obtained by numerical
+integration</li>
 <li><code>Z_exact</code>: the analytic value of Z (where available)</li>
-<li><code>Z_est(t)</code>: the RAFEP estimate for threshold <code>t</code>, in the form <code>mean ± std</code> where the mean and standard deviation (std) are obtained from the multiple iterations. <code>t=inf</code> refers to the RAFEP estimate that is based on <em>all</em> samples without discarding any outliers.</li>
-<li><code>Z_est(t)/Z_exact</code>: the ratio of the RAFEP estimate and the &quot;exact&quot; value, which is either the analytic value or the numeric value.</li>
+<li><code>Z_est(t)</code>: the RAFEP estimate for threshold
+<code>t</code>, in the form <code>mean ± std</code> where the mean and
+standard deviation (std) are obtained from the multiple iterations.
+<code>t=inf</code> refers to the RAFEP estimate that is based on
+<em>all</em> samples without discarding any outliers.</li>
+<li><code>Z_est(t)/Z_exact</code>: the ratio of the RAFEP estimate and
+the “exact” value, which is either the analytic value or the numeric
+value.</li>
 </ul>
-<p>Additionally, each sampling iteration creates a subdirectory <code>out-0000</code> etc, containing the following files:</p>
+<p>Additionally, each sampling iteration creates a subdirectory
+<code>out-0000</code> etc, containing the following files:</p>
 <ul>
-<li><code>log</code> records some basic statistics for the MC/RE sampling, as well as the RAFEP estimation of Z for this sample and the given thresholds. <code>Z_est(inf)</code> is the RAFEP estimation without removing any outliers (i.e. technically with threshold = infinity) while <code>Z_est(t)</code> is the RAFEP estimation for threshold value <code>t</code>.</li>
-<li>If <code>save = yes</code> was given in the <code>[trajectory]</code> section:</li>
-<li><code>Traj.dat</code> contains the samples, one per line (space-separated coordinates).</li>
-<li><code>Energy.dat</code> contains the potential energy for the samples, one per line.</li>
+<li><code>log</code> records some basic statistics for the MC/RE
+sampling, as well as the RAFEP estimation of Z for this sample and the
+given thresholds. <code>Z_est(inf)</code> is the RAFEP estimation
+without removing any outliers (i.e. technically with threshold =
+infinity) while <code>Z_est(t)</code> is the RAFEP estimation for
+threshold value <code>t</code>.</li>
+<li>If <code>save = yes</code> was given in the
+<code>[trajectory]</code> section:
+<ul>
+<li><code>Traj.dat</code> contains the samples, one per line
+(space-separated coordinates).</li>
+<li><code>Energy.dat</code> contains the potential energy for the
+samples, one per line.</li>
+</ul></li>
 </ul>
 <h2 id="reading-in-saved-samples">Reading in saved samples</h2>
-<p>It is also possible to read in existing samples, e.g. if you want to try out additional values for the RAFEP threshold without having to re-do the (potentially time-consuming) sampling. To do so, use <code>method = read</code> in the <code>[trajectory]</code> section. You also need to specify the <code>temp</code> and <code>kB</code> parameters.</p>
-<p>In this mode, the per-iteration <code>log</code> file is not overwritten. Instead, the new RAFEP estimates are appended to it.</p>
-<p>For example, to run just the RAFEP estimate with threshold values 5.0 and 6.0 based on existing samples that had been generated from input file <code>input.conf</code>, you can run (make sure not to overwrite your original output file!)</p>
+<p>It is also possible to read in existing samples, e.g. if you want to
+try out additional values for the RAFEP threshold without having to
+re-do the (potentially time-consuming) sampling. To do so, use
+<code>method = read</code> in the <code>[trajectory]</code> section. You
+also need to specify the <code>temp</code> and <code>kB</code>
+parameters.</p>
+<p>In this mode, the per-iteration <code>log</code> file is not
+overwritten. Instead, the new RAFEP estimates are appended to it.</p>
+<p>For example, to run just the RAFEP estimate with threshold values 5.0
+and 6.0 based on existing samples that had been generated from input
+file <code>input.conf</code>, you can run (make sure not to overwrite
+your original output file!)</p>
 <pre><code>./main.py -p trajectory.method=read -p rafep.threshold=5.0,6.0 input.conf | tee output2.log</code></pre>
+<p>Additionally, by setting <code>trajectory.nsteps</code> to a lower
+value than originally, the read-in trajectory will be truncated
+accordingly (namely to
+<code>trajectory.nsteps // trajectory.outfreq</code> samples). This way,
+one can explore the effect of the trajectory length without having to
+run the expensive sampling step for all desired trajectory lengths.
+Example:</p>
+<pre><code>./main.py -p trajectory.method=read -p trajectory.nsteps=100000 input.conf | tee output3.log</code></pre>
 </body>
 </html>

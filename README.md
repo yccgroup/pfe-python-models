@@ -126,8 +126,11 @@ If RE is used, also the following parameters are needed:
 
 ### `[rafep]` section
 
-* `threshold`: for the RAFEP evaluation, samples with energy larger than `threshold * kB * temp`
-  are discarded. This can either be a single number, or a comma-separated list of numbers, in
+* `nbins`: the number of bins used (per dimension) for estimating the configuration
+  space covered during the sampling
+* `threshold`: for the RAFEP evaluation, a fraction of samples with the highest energies
+  are discarded. `threshold` specifies this fraction, e.g. `0.01` for 1%.
+  This can either be a single number, or a comma-separated list of numbers, in
   which case the RAFEP evaluation is performed for each of the listed thresholds in turn.
 
 
@@ -143,8 +146,8 @@ The main output (written to standard output) contains the following information:
 * `Z_exact`: the analytic value of Z (where available)
 * `Z_est(t)`: the RAFEP estimate for threshold `t`, in the form `mean ± std`
    where the mean and standard deviation (std) are obtained from the multiple
-   iterations.  `t=inf` refers to the RAFEP estimate that is based on *all*
-   samples without discarding any outliers.
+   iterations.  `t=0.0` refers to the RAFEP estimate that is based on *all*
+   samples without discarding any high-energy outliers.
 * `Z_est(t)/Z_exact`: the ratio of the RAFEP estimate and the "exact" value,
   which is either the analytic value or the numeric value.
 
@@ -152,8 +155,8 @@ Additionally, each sampling iteration creates a subdirectory `out-0000` etc,
 containing the following files:
 
 * `log` records some basic statistics for the MC/RE sampling, as well as the RAFEP
-  estimation of Z for this sample and the given thresholds. `Z_est(inf)` is the RAFEP
-  estimation without removing any outliers (i.e. technically with threshold = infinity)
+  estimation of Z for this sample and the given thresholds. `Z_est(0.0)` is the RAFEP
+  estimation without removing any outliers (i.e. technically with threshold = 0.0)
   while `Z_est(t)` is the RAFEP estimation for threshold value `t`.
 * If `save = yes` was given in the `[trajectory]` section:
   * `Traj.dat` contains the samples, one per line (space-separated coordinates).
@@ -174,4 +177,12 @@ based on existing samples that had been generated from input file `input.conf`,
 you can run (make sure not to overwrite your original output file!)
 
     ./main.py -p trajectory.method=read -p rafep.threshold=5.0,6.0 input.conf | tee output2.log
+
+Additionally, by setting `trajectory.nsteps` to a lower value than originally,
+the read-in trajectory will be truncated accordingly (namely to
+`trajectory.nsteps // trajectory.outfreq` samples). This way, one can explore
+the effect of the trajectory length without having to run the expensive sampling
+step for all desired trajectory lengths. Example:
+
+    ./main.py -p trajectory.method=read -p trajectory.nsteps=100000 input.conf | tee output3.log
 

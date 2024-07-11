@@ -46,6 +46,12 @@ def run_once(cfg, it):
         savetraj = False
         log(fd, f"Reading samples...")
         samples = driver.run_readtraj(cfg,it)
+        nsteps = cfg.getint('trajectory', 'nsteps')
+        outfreq = cfg.getint('trajectory', 'outfreq')
+        nsamples = nsteps // outfreq
+        if nsamples < samples.nsamples:
+            log(fd, f"Truncating trajectory to {nsamples} samples...")
+            samples.truncate(nsamples)
 
     else:
         fd = open("log", "w")
@@ -78,7 +84,7 @@ def run_once(cfg, it):
     # estimate Z via RAFEP (no threshold)
     Z = driver.run_RAFEP(cfg, samples)
     Zs = [Z]
-    log(fd, f"Z_est(inf) = {Z}")
+    log(fd, f"Z_est(0.000) = {Z}")
 
     # remove the sampling outliers
     for threshold in cfg.thresholds:
@@ -93,7 +99,6 @@ def run_once(cfg, it):
         Z = driver.run_RAFEP(cfg, trunc_samples)
         Zs.append(Z)
         log(fd, f"Z_est({threshold:.3f}) = {Z}")
-
 
     fd.close()
     os.chdir(origdir)
@@ -148,7 +153,7 @@ if __name__ == '__main__':
     Zest_data = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
 
     # output RAFEP results
-    thresholds = [inf] + cfg.thresholds
+    thresholds = [0.0] + cfg.thresholds
     for i,threshold in enumerate(thresholds):
         Zest = [ Zs[i] for Zs in Zest_data ]
         np.savetxt(f"Zest_{threshold:.3f}.dat", Zest)
