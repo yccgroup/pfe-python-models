@@ -104,13 +104,13 @@ def run_readtraj(cfg, it):
     return MCTrajectory(traj, energies, len(traj))
 
 
-def run_RAFEP(cfg, samples):
+def run_RAFEP(cfg, samples, N):
     if isinstance(cfg.pot, potentials.PotentialFunction1D):
         rafep_func = rafep.partfunc_RAFEP1D
     elif isinstance(cfg.pot, potentials.PotentialFunction2D):
         rafep_func = rafep.partfunc_RAFEP2D
     nbins = cfg.getint('rafep', 'nbins')
-    Z,lnZ = rafep_func(samples.traj, samples.energies, cfg.beta, nbins)
+    Z,lnZ = rafep_func(samples.traj, samples.energies, N, cfg.beta, nbins)
     return Z
 
 

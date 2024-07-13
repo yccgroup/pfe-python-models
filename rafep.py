@@ -35,10 +35,10 @@ def autotruncate(Traj,Energy,Threshold,bothends=False):
         
 
 # 1D RAFEP
-def partfunc_RAFEP1D(Traj,Energy,beta,nbins=100):
+def partfunc_RAFEP1D(Traj,Energy,N,beta,nbins=100):
     # calculate the partition function using RAFEP theory
     Emax = np.max(Energy)
-    Avg = np.mean(np.exp(beta*(Energy-Emax))) * np.exp(beta*Emax)
+    Avg = np.sum(np.exp(beta*(Energy-Emax)))/N * np.exp(beta*Emax)
     # calculate V0 via histogram (for general potentials)
     hist, bin_edges = np.histogram(Traj,bins=nbins)
     ndim = len(hist)
@@ -48,16 +48,16 @@ def partfunc_RAFEP1D(Traj,Energy,beta,nbins=100):
             V0 += 1*(bin_edges[i+1]-bin_edges[i])
 
     Z   = V0/Avg
-    lnZ = np.log(V0) - np.log(np.mean(np.exp(beta*(Energy-Emax)))) - beta*Emax
+    lnZ = np.log(V0) - np.log(np.sum(np.exp(beta*(Energy-Emax)))/N) - beta*Emax
 
     return Z, lnZ
 
 
 # 2D RAFEP
-def partfunc_RAFEP2D(Traj,Energy,beta,nbins=100):
+def partfunc_RAFEP2D(Traj,Energy,N,beta,nbins=100):
     # calculate the partition function using RAFEP theory
     Emax = np.max(Energy)
-    Avg = np.mean(np.exp(beta*(Energy-Emax))) * np.exp(beta*Emax)
+    Avg = np.sum(np.exp(beta*(Energy-Emax)))/N * np.exp(beta*Emax)
     # calculate V0 via histogram (for general potentials)
     X,Y = np.transpose(Traj)
     hist, xedges, yedges = np.histogram2d(X,Y,bins=nbins)
@@ -66,7 +66,7 @@ def partfunc_RAFEP2D(Traj,Energy,beta,nbins=100):
 
     V0  = np.count_nonzero(hist)*dx*dy
     Z   = V0/Avg
-    lnZ = np.log(V0) - np.log(np.mean(np.exp(beta*(Energy-Emax)))) - beta*Emax
+    lnZ = np.log(V0) - np.log(np.sum(np.exp(beta*(Energy-Emax)))/N) - beta*Emax
 
     return Z, lnZ
 
