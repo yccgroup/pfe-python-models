@@ -83,28 +83,27 @@ def run_once(cfg, it):
 
     # estimate Z via RAFEP (no threshold)
     N = samples.nsamples
-    Z,varlnZ,ratio = driver.run_RAFEP(cfg, samples, N)
-    Zs = [Z]
-    log(fd, f"Z_est(0.000) = {Z}   [ err(lnZ) = {np.sqrt(varlnZ)} ]")
+    lnZ,varlnZ,tryEstar = driver.run_RAFEP(cfg, samples, N)
+    sigmalnZ = np.sqrt(varlnZ)
+    lnZs = [lnZ]
+    sigmalnZs = [sigmalnZ]
+    log(fd, f"ln Z_est(0.000) = {lnZ}   [ σ(lnZ) = {sigmalnZ} ]")
 
     # remove the sampling outliers
     for threshold in cfg.thresholds:
-        #E_cut = threshold/cfg.beta + samples.energy_min()
-        #trunc_traj, trunc_energies = rafep.truncate(samples.traj, samples.energies, E_cut)
-        #trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
-        #log(fd, f"Truncating samples, threshold={threshold:.3f}, E_cut={E_cut:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
         trunc_traj, trunc_energies, Elower, Eupper = rafep.autotruncate(samples.traj, samples.energies, threshold)
         trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
         log(fd, f"Truncating samples, threshold={threshold:.3f}, Elower={Elower:.3f}, Eupper={Eupper:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
         # run RAFEP again
-        Z,varlnZ,ratio = driver.run_RAFEP(cfg, trunc_samples, N)
-        check = np.exp(cfg.beta * Eupper) - 2 * ratio
-        Zs.append(Z)
-        log(fd, f"Z_est({threshold:.3f}) = {Z}   [ err(lnZ) = {np.sqrt(varlnZ)}   check = {check} ]")
+        lnZ,varlnZ,tryEstar = driver.run_RAFEP(cfg, trunc_samples, N)
+        sigmalnZ = np.sqrt(varlnZ)
+        lnZs.append(lnZ)
+        sigmalnZs.append(sigmalnZ)
+        log(fd, f"ln Z_est({threshold:.3f}) = {lnZ}   [ σ(lnZ) = {sigmalnZ}   E* -> {tryEstar:.3f} ]")
 
     fd.close()
     os.chdir(origdir)
-    return Zs
+    return (lnZs,sigmalnZs)
 
 
 if __name__ == '__main__':
@@ -139,28 +138,29 @@ if __name__ == '__main__':
     log(fd)
 
     # calculate partition function via numeric integration
-    Zint = driver.run_integral(cfg)
-    log(fd, f"Z_int = {Zint}")
+    lnZint = driver.run_integral(cfg)
+    log(fd, f"ln Z_int = {lnZint}")
 
     # get analytic partition function (where available)
-    Zexact = driver.run_exact(cfg)
-    if Zexact is None:
+    lnZexact = driver.run_exact(cfg)
+    if lnZexact is None:
         log(fd, "Z_exact not available, using Z_int")
-        Zexact = Zint
+        lnZexact = lnZint
     else:
-        log(fd, f"Z_exact = {Zexact}")
+        log(fd, f"ln Z_exact = {lnZexact}")
 
     # run sampling in parallel
     pool = multiprocessing.Pool(nproc)
-    Zest_data = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
+    data = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
 
     # output RAFEP results
     thresholds = [0.0] + cfg.thresholds
     for i,threshold in enumerate(thresholds):
-        Zest = [ Zs[i] for Zs in Zest_data ]
-        np.savetxt(f"Zest_{threshold:.3f}.dat", Zest)
-        log(fd, f"Z_est({threshold:.3f}) = {np.mean(Zest)} ± {np.std(Zest)}")
-        log(fd, f"Z_est({threshold:.3f})/Z_exact = {np.mean(Zest)/Zexact} ± {np.std(Zest)/Zexact}")
+        lnZest = [ lnZs[i] for (lnZs,sigmalnZs) in data ]
+        sigmalnZest = [ sigmalnZs[i] for (lnZs,sigmalnZs) in data ]
+        np.savetxt(f"lnZest_{threshold:.3f}.dat", np.column_stack([lnZest,sigmalnZest]))
+        log(fd, f"ln Z_est({threshold:.3f}) = {np.mean(lnZest)} ± {np.std(lnZest)} ({np.mean(sigmalnZest)})")
+        log(fd, f"ln Z_est({threshold:.3f}) - ln Z_exact = {np.mean(lnZest)-lnZexact} ± {np.std(lnZest)}")
 
     log(fd)
     log(fd, f"program end: {timestamp()}")
