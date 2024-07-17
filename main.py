@@ -83,9 +83,9 @@ def run_once(cfg, it):
 
     # estimate Z via RAFEP (no threshold)
     N = samples.nsamples
-    Z = driver.run_RAFEP(cfg, samples, N)
+    Z,varlnZ,ratio = driver.run_RAFEP(cfg, samples, N)
     Zs = [Z]
-    log(fd, f"Z_est(0.000) = {Z}")
+    log(fd, f"Z_est(0.000) = {Z}   [ err(lnZ) = {np.sqrt(varlnZ)} ]")
 
     # remove the sampling outliers
     for threshold in cfg.thresholds:
@@ -97,9 +97,10 @@ def run_once(cfg, it):
         trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
         log(fd, f"Truncating samples, threshold={threshold:.3f}, Elower={Elower:.3f}, Eupper={Eupper:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
         # run RAFEP again
-        Z = driver.run_RAFEP(cfg, trunc_samples, N)
+        Z,varlnZ,ratio = driver.run_RAFEP(cfg, trunc_samples, N)
+        check = np.exp(cfg.beta * Eupper) - 2 * ratio
         Zs.append(Z)
-        log(fd, f"Z_est({threshold:.3f}) = {Z}")
+        log(fd, f"Z_est({threshold:.3f}) = {Z}   [ err(lnZ) = {np.sqrt(varlnZ)}   check = {check} ]")
 
     fd.close()
     os.chdir(origdir)
