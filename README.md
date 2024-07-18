@@ -26,7 +26,7 @@ install:
 
     conda create -n py3
     conda activate py3
-    conda install python=3 numpy scipy
+    conda install python=3 'numpy<2' scipy
 
 
 when using:
@@ -142,22 +142,30 @@ The main output (written to standard output) contains the following information:
 * Program start and end time.
 * A copy of all input file settings (taking into account any settings
   overridden with the `--param` options).
-* `Z_int`: the value of Z obtained by numerical integration
-* `Z_exact`: the analytic value of Z (where available)
-* `Z_est(t)`: the RAFEP estimate for threshold `t`, in the form `mean ± std`
-   where the mean and standard deviation (std) are obtained from the multiple
+* `ln Z_int`: the value of ln(Z) obtained by numerical integration
+* `ln Z_exact`: the analytic value of ln(Z) (where available)
+* `ln Z_est(t)`: the RAFEP estimate for threshold `t`, in the form `mean ± std (sigma)`
+   where the mean and standard deviation (`std`) are obtained from the multiple
    iterations.  `t=0.0` refers to the RAFEP estimate that is based on *all*
-   samples without discarding any high-energy outliers.
-* `Z_est(t)/Z_exact`: the ratio of the RAFEP estimate and the "exact" value,
+   samples without discarding any high-energy outliers.  `sigma` provides an estimate
+   for the error in the RAFEP estimate of ln(Z) due to the sampling -- this can be
+   calculated for each trajectory, and here the mean over all trajectories is printed.
+   In general, `sigma` should be smaller than `std`, as there is an additional error
+   from the volume calculation.
+* `ln Z_est(t) - ln Z_exact`: the difference of the RAFEP estimate from the "exact" value,
   which is either the analytic value or the numeric value.
 
 Additionally, each sampling iteration creates a subdirectory `out-0000` etc,
 containing the following files:
 
 * `log` records some basic statistics for the MC/RE sampling, as well as the RAFEP
-  estimation of Z for this sample and the given thresholds. `Z_est(0.0)` is the RAFEP
+  estimation of ln(Z) for this sample and the given thresholds. `ln Z_est(0.0)` is the RAFEP
   estimation without removing any outliers (i.e. technically with threshold = 0.0)
-  while `Z_est(t)` is the RAFEP estimation for threshold value `t`.
+  while `ln Z_est(t)` is the RAFEP estimation for threshold value `t`.
+  Further, for each threshold, an estimate for the error in ln(Z) due to the sampling
+  is provided (`σ(lnZ)`), and a more optimal value for the energy cutoff `E*` is
+  suggested.  (Following the `E*` suggestions iteratively should result in minimizing
+  `σ(lnZ)`.)
 * If `save = yes` was given in the `[trajectory]` section:
   * `Traj.dat` contains the samples, one per line (space-separated coordinates).
   * `Energy.dat` contains the potential energy for the samples, one per line.
