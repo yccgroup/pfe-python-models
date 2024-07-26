@@ -1,2 +1,2 @@
 scipy
-numpy
+numpy < 2

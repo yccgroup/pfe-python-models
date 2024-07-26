@@ -46,6 +46,12 @@ def run_once(cfg, it):
         savetraj = False
         log(fd, f"Reading samples...")
         samples = driver.run_readtraj(cfg,it)
+        nsteps = cfg.getint('trajectory', 'nsteps')
+        outfreq = cfg.getint('trajectory', 'outfreq')
+        nsamples = nsteps // outfreq
+        if nsamples < samples.nsamples:
+            log(fd, f"Truncating trajectory to {nsamples} samples...")
+            samples.truncate(nsamples)
 
     else:
         fd = open("log", "w")
@@ -69,25 +75,35 @@ def run_once(cfg, it):
         log(fd, f"0.5 * kB * T    = {0.5/cfg.beta}")
         log(fd)
 
+    # output the energy histogram for analysis
+    Emin = 0.0
+    counts, Evalues = np.histogram(samples.energies, range=(Emin, Emin + 12.0/cfg.beta), bins=24)
+    outdata = np.column_stack((Evalues[0:-1],counts))
+    np.savetxt("histogram.dat",outdata,fmt="%.10f %d")
+
     # estimate Z via PFE (no threshold)
-    Z = driver.run_PFE(cfg, samples)
-    Zs = [Z]
-    log(fd, f"Z_est(inf) = {Z}")
+    N = samples.nsamples
+    lnZ,varlnZ,tryEstar = driver.run_PFE(cfg, samples, N)
+    sigmalnZ = np.sqrt(varlnZ)
+    lnZs = [lnZ]
+    sigmalnZs = [sigmalnZ]
+    log(fd, f"ln Z_est(0.000) = {lnZ}   [ σ(lnZ) = {sigmalnZ} ]")
 
     # remove the sampling outliers
     for threshold in cfg.thresholds:
-        E_cut = threshold/cfg.beta + samples.energy_min()
-        trunc_traj, trunc_energies = pfe.truncate(samples.traj, samples.energies, E_cut)
+        trunc_traj, trunc_energies, Elower, Eupper = pfe.autotruncate(samples.traj, samples.energies, threshold)
         trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
-        log(fd, f"Truncating samples, threshold={threshold:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
+        log(fd, f"Truncating samples, threshold={threshold:.3f}, Elower={Elower:.3f}, Eupper={Eupper:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
         # run PFE again
-        Z = driver.run_PFE(cfg, trunc_samples)
-        Zs.append(Z)
-        log(fd, f"Z_est({threshold:.3f}) = {Z}")
+        lnZ,varlnZ,tryEstar = driver.run_PFE(cfg, trunc_samples, N)
+        sigmalnZ = np.sqrt(varlnZ)
+        lnZs.append(lnZ)
+        sigmalnZs.append(sigmalnZ)
+        log(fd, f"ln Z_est({threshold:.3f}) = {lnZ}   [ σ(lnZ) = {sigmalnZ}   E* -> {tryEstar:.3f} ]")
 
     fd.close()
     os.chdir(origdir)
-    return Zs
+    return (lnZs,sigmalnZs)
 
 
 if __name__ == '__main__':
@@ -122,28 +138,29 @@ if __name__ == '__main__':
     log(fd)
 
     # calculate partition function via numeric integration
-    Zint = driver.run_integral(cfg)
-    log(fd, f"Z_int = {Zint}")
+    lnZint = driver.run_integral(cfg)
+    log(fd, f"ln Z_int = {lnZint}")
 
     # get analytic partition function (where available)
-    Zexact = driver.run_exact(cfg)
-    if Zexact is None:
+    lnZexact = driver.run_exact(cfg)
+    if lnZexact is None:
         log(fd, "Z_exact not available, using Z_int")
-        Zexact = Zint
+        lnZexact = lnZint
     else:
-        log(fd, f"Z_exact = {Zexact}")
+        log(fd, f"ln Z_exact = {lnZexact}")
 
     # run sampling in parallel
     pool = multiprocessing.Pool(nproc)
-    Zest_data = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
+    data = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
 
     # output PFE results
-    thresholds = [inf] + cfg.thresholds
+    thresholds = [0.0] + cfg.thresholds
     for i,threshold in enumerate(thresholds):
-        Zest = [ Zs[i] for Zs in Zest_data ]
-        np.savetxt(f"Zest_{threshold:.3f}.dat", Zest)
-        log(fd, f"Z_est({threshold:.3f}) = {np.mean(Zest)} ± {np.std(Zest)}")
-        log(fd, f"Z_est({threshold:.3f})/Z_exact = {np.mean(Zest)/Zexact} ± {np.std(Zest)/Zexact}")
+        lnZest = [ lnZs[i] for (lnZs,sigmalnZs) in data ]
+        sigmalnZest = [ sigmalnZs[i] for (lnZs,sigmalnZs) in data ]
+        np.savetxt(f"lnZest_{threshold:.3f}.dat", np.column_stack([lnZest,sigmalnZest]))
+        log(fd, f"ln Z_est({threshold:.3f}) = {np.mean(lnZest)} ± {np.std(lnZest)} ({np.mean(sigmalnZest)})")
+        log(fd, f"ln Z_est({threshold:.3f}) - ln Z_exact = {np.mean(lnZest)-lnZexact} ± {np.std(lnZest)}")
 
     log(fd)
     log(fd, f"program end: {timestamp()}")

@@ -193,7 +193,7 @@ them.</p>
 <p>install:</p>
 <pre><code>conda create -n py3
 conda activate py3
-conda install python=3 numpy scipy</code></pre>
+conda install python=3 &#39;numpy&lt;2&#39; scipy</code></pre>
 <p>when using:</p>
 <pre><code>conda activate py3</code></pre>
 <p>when done:</p>
@@ -296,11 +296,14 @@ replicas are equidistantly spaced in temperature.</li>
 </ul>
 <h3 id="pfe-section"><code>[pfe]</code> section</h3>
 <ul>
-<li><code>threshold</code>: for the PFE evaluation, samples with energy
-larger than <code>threshold * kB * temp</code> are discarded. This can
-either be a single number, or a comma-separated list of numbers, in
-which case the PFE evaluation is performed for each of the listed
-thresholds in turn.</li>
+<li><code>nbins</code>: the number of bins used (per dimension) for
+estimating the configuration space covered during the sampling</li>
+<li><code>threshold</code>: for the PFE evaluation, a fraction of
+samples with the highest energies are discarded. <code>threshold</code>
+specifies this fraction, e.g. <code>0.01</code> for 1%. This can either
+be a single number, or a comma-separated list of numbers, in which case
+the PFE evaluation is performed for each of the listed thresholds in
+turn.</li>
 </ul>
 <h2 id="output">Output</h2>
 <p>The main output (written to standard output) contains the following
@@ -310,27 +313,37 @@ information:</p>
 <li>Program start and end time.</li>
 <li>A copy of all input file settings (taking into account any settings
 overridden with the <code>--param</code> options).</li>
-<li><code>Z_int</code>: the value of Z obtained by numerical
+<li><code>ln Z_int</code>: the value of ln(Z) obtained by numerical
 integration</li>
-<li><code>Z_exact</code>: the analytic value of Z (where available)</li>
-<li><code>Z_est(t)</code>: the PFE estimate for threshold
-<code>t</code>, in the form <code>mean ± std</code> where the mean and
-standard deviation (std) are obtained from the multiple iterations.
-<code>t=inf</code> refers to the PFE estimate that is based on
-<em>all</em> samples without discarding any outliers.</li>
-<li><code>Z_est(t)/Z_exact</code>: the ratio of the PFE estimate and the
-“exact” value, which is either the analytic value or the numeric
-value.</li>
+<li><code>ln Z_exact</code>: the analytic value of ln(Z) (where
+available)</li>
+<li><code>ln Z_est(t)</code>: the PFE estimate for threshold
+<code>t</code>, in the form <code>mean ± std (sigma)</code> where the
+mean and standard deviation (<code>std</code>) are obtained from the
+multiple iterations. <code>t=0.0</code> refers to the PFE estimate that
+is based on <em>all</em> samples without discarding any high-energy
+outliers. <code>sigma</code> provides an estimate for the error in the
+PFE estimate of ln(Z) due to the sampling – this can be calculated for
+each trajectory, and here the mean over all trajectories is printed. In
+general, <code>sigma</code> should be smaller than <code>std</code>, as
+there is an additional error from the volume calculation.</li>
+<li><code>ln Z_est(t) - ln Z_exact</code>: the difference of the PFE
+estimate from the “exact” value, which is either the analytic value or
+the numeric value.</li>
 </ul>
 <p>Additionally, each sampling iteration creates a subdirectory
 <code>out-0000</code> etc, containing the following files:</p>
 <ul>
 <li><code>log</code> records some basic statistics for the MC/RE
-sampling, as well as the PFE estimation of Z for this sample and the
-given thresholds. <code>Z_est(inf)</code> is the PFE estimation without
-removing any outliers (i.e. technically with threshold = infinity) while
-<code>Z_est(t)</code> is the PFE estimation for threshold value
-<code>t</code>.</li>
+sampling, as well as the PFE estimation of ln(Z) for this sample and the
+given thresholds. <code>ln Z_est(0.0)</code> is the PFE estimation
+without removing any outliers (i.e. technically with threshold = 0.0)
+while <code>ln Z_est(t)</code> is the PFE estimation for threshold value
+<code>t</code>. Further, for each threshold, an estimate for the error
+in ln(Z) due to the sampling is provided (<code>σ(lnZ)</code>), and a
+more optimal value for the energy cutoff <code>E*</code> is suggested.
+(Following the <code>E*</code> suggestions iteratively should result in
+minimizing <code>σ(lnZ)</code>.)</li>
 <li>If <code>save = yes</code> was given in the
 <code>[trajectory]</code> section:
 <ul>
@@ -354,5 +367,13 @@ and 6.0 based on existing samples that had been generated from input
 file <code>input.conf</code>, you can run (make sure not to overwrite
 your original output file!)</p>
 <pre><code>./main.py -p trajectory.method=read -p pfe.threshold=5.0,6.0 input.conf | tee output2.log</code></pre>
+<p>Additionally, by setting <code>trajectory.nsteps</code> to a lower
+value than originally, the read-in trajectory will be truncated
+accordingly (namely to
+<code>trajectory.nsteps // trajectory.outfreq</code> samples). This way,
+one can explore the effect of the trajectory length without having to
+run the expensive sampling step for all desired trajectory lengths.
+Example:</p>
+<pre><code>./main.py -p trajectory.method=read -p trajectory.nsteps=100000 input.conf | tee output3.log</code></pre>
 </body>
 </html>

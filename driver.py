@@ -104,19 +104,20 @@ def run_readtraj(cfg, it):
     return MCTrajectory(traj, energies, len(traj))
 
 
-def run_PFE(cfg, samples):
+def run_PFE(cfg, samples, N):
     if isinstance(cfg.pot, potentials.PotentialFunction1D):
         pfe_func = pfe.partfunc1D
     elif isinstance(cfg.pot, potentials.PotentialFunction2D):
         pfe_func = pfe.partfunc2D
-    Z,lnZ = pfe_func(samples.traj, samples.energies, cfg.beta)
-    return Z
+    nbins = cfg.getint('pfe', 'nbins')
+    lnZ,varlnZ,tryEstar = pfe_func(samples.traj, samples.energies, N, cfg.beta, nbins)
+    return lnZ,varlnZ,tryEstar
 
 
 def run_exact(cfg):
     if hasattr(cfg.pot, 'partfunc_exact'):
         Z, lnZ = cfg.pot.partfunc_exact(cfg.beta)
-        return Z
+        return lnZ
     else:
         return None
 
@@ -126,5 +127,5 @@ def run_integral(cfg):
     hi = cfg.getfloat('integral', 'upper')
     dx = cfg.getfloat('integral', 'dx')
     Zint, lnZint = cfg.pot.partfunc_integral(hi, lo, dx, cfg.beta)
-    return Zint
+    return lnZint
 
