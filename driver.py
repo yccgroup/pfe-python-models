@@ -104,14 +104,14 @@ def run_readtraj(cfg, it):
     return MCTrajectory(traj, energies, len(traj))
 
 
-def run_PFE(cfg, samples, N):
+def run_PFE(cfg, samples, Estar=None):
     if isinstance(cfg.pot, potentials.PotentialFunction1D):
-        pfe_func = pfe.partfunc1D
+        omegafunc = pfe.omega1D
     elif isinstance(cfg.pot, potentials.PotentialFunction2D):
-        pfe_func = pfe.partfunc2D
+        omegafunc = pfe.omega2D
     nbins = cfg.getint('pfe', 'nbins')
-    lnZ,varlnZ,tryEstar = pfe_func(samples.traj, samples.energies, N, cfg.beta, nbins)
-    return lnZ,varlnZ,tryEstar
+    lnZ,Err2lnZ,Estar = pfe.partfunc(samples.traj, samples.energies, cfg.beta, omegafunc, nbins, Estar)
+    return lnZ,Err2lnZ,Estar
 
 
 def run_exact(cfg):

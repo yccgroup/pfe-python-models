@@ -81,29 +81,29 @@ def run_once(cfg, it):
     outdata = np.column_stack((Evalues[0:-1],counts))
     np.savetxt("histogram.dat",outdata,fmt="%.10f %d")
 
-    # estimate Z via PFE (no threshold)
+    # estimate Z via PFE (optimizing Estar)
     N = samples.nsamples
-    lnZ,varlnZ,tryEstar = driver.run_PFE(cfg, samples, N)
-    sigmalnZ = np.sqrt(varlnZ)
+    lnZ,Err2lnZ,Estar = driver.run_PFE(cfg, samples)
+    ErrlnZ = np.sqrt(Err2lnZ)
     lnZs = [lnZ]
-    sigmalnZs = [sigmalnZ]
-    log(fd, f"ln Z_est(0.000) = {lnZ}   [ σ(lnZ) = {sigmalnZ} ]")
+    ErrlnZs = [ErrlnZ]
+    Estars = [Estar]
+    log(fd, f"ln Z_est(_opt_) = {lnZ}   [ Err(lnZ) = {ErrlnZ}   E* = {Estar:.3f} ]")
 
     # remove the sampling outliers
     for threshold in cfg.thresholds:
-        trunc_traj, trunc_energies, Elower, Eupper = pfe.autotruncate(samples.traj, samples.energies, threshold)
-        trunc_samples = MCTrajectory(trunc_traj, trunc_energies, len(trunc_traj))
-        log(fd, f"Truncating samples, threshold={threshold:.3f}, Elower={Elower:.3f}, Eupper={Eupper:.3f}, kept {100*trunc_samples.nsamples/samples.nsamples:.3f}%")
-        # run PFE again
-        lnZ,varlnZ,tryEstar = driver.run_PFE(cfg, trunc_samples, N)
-        sigmalnZ = np.sqrt(varlnZ)
+        Estar = np.quantile(samples.energies, 1-threshold)
+        # run PFE again with fixed Estar
+        lnZ,Err2lnZ,Estar = driver.run_PFE(cfg, samples, Estar)
+        ErrlnZ = np.sqrt(Err2lnZ)
         lnZs.append(lnZ)
-        sigmalnZs.append(sigmalnZ)
-        log(fd, f"ln Z_est({threshold:.3f}) = {lnZ}   [ σ(lnZ) = {sigmalnZ}   E* -> {tryEstar:.3f} ]")
+        ErrlnZs.append(ErrlnZ)
+        Estars.append(Estar)
+        log(fd, f"ln Z_est({threshold:.3f}) = {lnZ}   [ Err(lnZ) = {ErrlnZ}   E* = {Estar:.3f} ]")
 
     fd.close()
     os.chdir(origdir)
-    return (lnZs,sigmalnZs)
+    return (lnZs,ErrlnZs,Estars)
 
 
 if __name__ == '__main__':
@@ -154,13 +154,19 @@ if __name__ == '__main__':
     data = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
 
     # output PFE results
-    thresholds = [0.0] + cfg.thresholds
+    thresholds = [None] + cfg.thresholds
     for i,threshold in enumerate(thresholds):
-        lnZest = [ lnZs[i] for (lnZs,sigmalnZs) in data ]
-        sigmalnZest = [ sigmalnZs[i] for (lnZs,sigmalnZs) in data ]
-        np.savetxt(f"lnZest_{threshold:.3f}.dat", np.column_stack([lnZest,sigmalnZest]))
-        log(fd, f"ln Z_est({threshold:.3f}) = {np.mean(lnZest)} ± {np.std(lnZest)} ({np.mean(sigmalnZest)})")
-        log(fd, f"ln Z_est({threshold:.3f}) - ln Z_exact = {np.mean(lnZest)-lnZexact} ± {np.std(lnZest)}")
+        lnZest    = [ lnZs[i]    for (lnZs,ErrlnZs,Estars) in data ]
+        ErrlnZest = [ ErrlnZs[i] for (lnZs,ErrlnZs,Estars) in data ]
+        Estars    = [ Estars[i]  for (lnZs,ErrlnZs,Estars) in data ]
+        if threshold is None:
+            tag = '_opt_'
+        else:
+            tag = f"{threshold:.3f}"
+        np.savetxt(f"lnZest_{tag}.dat", np.column_stack([lnZest,ErrlnZest]))
+        log(fd, f"ln Z_est({tag}) = {np.mean(lnZest)} ± {np.std(lnZest)} ({np.mean(ErrlnZest)})")
+        log(fd, f"ln Z_est({tag}) - ln Z_exact = {np.mean(lnZest)-lnZexact} ± {np.std(lnZest)}")
+        log(fd, f"Estar({tag}) = {np.mean(Estars)} ± {np.std(Estars)}")
 
     log(fd)
     log(fd, f"program end: {timestamp()}")
