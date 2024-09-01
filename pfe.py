@@ -84,15 +84,18 @@ def partfunc(Traj,Energy,beta,omegafunc,nbins=100,Estar=None):
             # For next iteration
             Estar_prev = Estar
 
-    # Recalculate after Estar is found.
+    # Recalculate after Estar is found. Also count how much has been cut off.
     H = np.ones(N)
+    ncut = 0
     for i in range(N):
         if Energy[i] > Estar:
             H[i] = 0
-    # Calculate the Avg, Avg2 and Error2 (Energy shifted)
+            ncut += 1
+    # Calculate the Avg, Avg2, Error2 (Energy shifted), and cutoff fraction
     Avg = np.mean(Func*H)
     Avg2 = np.mean(Func2*H)
     Err2 = (Avg2/Avg**2 - 1) / N
+    cutfrac = ncut / N
  
     # Truncate the trajectory based on Estar
     Trajstar = []
@@ -108,7 +111,7 @@ def partfunc(Traj,Energy,beta,omegafunc,nbins=100,Estar=None):
 
     #print("lnZ:",lnZ,"Err:",np.sqrt(Err2),"E*:",Estar)
 
-    return lnZ, Err2, Estar
+    return lnZ, Err2, Estar, cutfrac
 
 
 # 1D Omega calculation

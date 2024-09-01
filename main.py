@@ -52,6 +52,8 @@ def run_once(cfg, it):
         if nsamples < samples.nsamples:
             log(fd, f"Truncating trajectory to {nsamples} samples...")
             samples.truncate(nsamples)
+        elif nsamples > samples.nsamples:
+            error(f"cannot read {nsamples} samples, trajectory only has {samples.nsamples}")
 
     else:
         fd = open("log", "w")
@@ -83,27 +85,29 @@ def run_once(cfg, it):
 
     # estimate Z via PFE (optimizing Estar)
     N = samples.nsamples
-    lnZ,Err2lnZ,Estar = driver.run_PFE(cfg, samples)
+    lnZ,Err2lnZ,Estar,cutfrac = driver.run_PFE(cfg, samples)
     ErrlnZ = np.sqrt(Err2lnZ)
     lnZs = [lnZ]
     ErrlnZs = [ErrlnZ]
     Estars = [Estar]
-    log(fd, f"ln Z_est(_opt_) = {lnZ}   [ Err(lnZ) = {ErrlnZ}   E* = {Estar:.3f} ]")
+    cutfracs = [cutfrac]
+    log(fd, f"ln Z_est(_opt_) = {lnZ}   [ Err(lnZ) = {ErrlnZ}   E* = {Estar:.3f}  cut% = {100*cutfrac:.2f} ]")
 
     # remove the sampling outliers
     for threshold in cfg.thresholds:
         Estar = np.quantile(samples.energies, 1-threshold)
         # run PFE again with fixed Estar
-        lnZ,Err2lnZ,Estar = driver.run_PFE(cfg, samples, Estar)
+        lnZ,Err2lnZ,Estar,cutfrac = driver.run_PFE(cfg, samples, Estar)
         ErrlnZ = np.sqrt(Err2lnZ)
         lnZs.append(lnZ)
         ErrlnZs.append(ErrlnZ)
         Estars.append(Estar)
-        log(fd, f"ln Z_est({threshold:.3f}) = {lnZ}   [ Err(lnZ) = {ErrlnZ}   E* = {Estar:.3f} ]")
+        cutfracs.append(cutfrac)
+        log(fd, f"ln Z_est({threshold:.3f}) = {lnZ}   [ Err(lnZ) = {ErrlnZ}   E* = {Estar:.3f}  cut% = {100*cutfrac:.2f} ]")
 
     fd.close()
     os.chdir(origdir)
-    return (lnZs,ErrlnZs,Estars)
+    return (lnZs,ErrlnZs,Estars,cutfracs)
 
 
 if __name__ == '__main__':
@@ -156,9 +160,10 @@ if __name__ == '__main__':
     # output PFE results
     thresholds = [None] + cfg.thresholds
     for i,threshold in enumerate(thresholds):
-        lnZest    = [ lnZs[i]    for (lnZs,ErrlnZs,Estars) in data ]
-        ErrlnZest = [ ErrlnZs[i] for (lnZs,ErrlnZs,Estars) in data ]
-        Estars    = [ Estars[i]  for (lnZs,ErrlnZs,Estars) in data ]
+        lnZest    = [ lnZs[i]     for (lnZs,ErrlnZs,Estars,cutfracs) in data ]
+        ErrlnZest = [ ErrlnZs[i]  for (lnZs,ErrlnZs,Estars,cutfracs) in data ]
+        Estars    = [ Estars[i]   for (lnZs,ErrlnZs,Estars,cutfracs) in data ]
+        cutfracs  = [ cutfracs[i] for (lnZs,ErrlnZs,Estars,cutfracs) in data ]
         if threshold is None:
             tag = '_opt_'
         else:
@@ -167,6 +172,7 @@ if __name__ == '__main__':
         log(fd, f"ln Z_est({tag}) = {np.mean(lnZest)} ± {np.std(lnZest)} ({np.mean(ErrlnZest)})")
         log(fd, f"ln Z_est({tag}) - ln Z_exact = {np.mean(lnZest)-lnZexact} ± {np.std(lnZest)}")
         log(fd, f"Estar({tag}) = {np.mean(Estars)} ± {np.std(Estars)}")
+        log(fd, f"cut%({tag}) = {100*np.mean(cutfracs):.3f} ± {100*np.std(cutfracs):.3f}")
 
     log(fd)
     log(fd, f"program end: {timestamp()}")

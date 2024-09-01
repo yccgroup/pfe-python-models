@@ -146,14 +146,20 @@ The main output (written to standard output) contains the following information:
 * `ln Z_exact`: the analytic value of ln(Z) (where available)
 * `ln Z_est(t)`: the PFE estimate for threshold `t`, in the form `mean ± std (sigma)`
    where the mean and standard deviation (`std`) are obtained from the multiple
-   iterations.  `t=0.0` refers to the PFE estimate that is based on *all*
-   samples without discarding any high-energy outliers.  `sigma` provides an estimate
+   iterations.  `sigma` provides an estimate
    for the error in the PFE estimate of ln(Z) due to the sampling -- this can be
    calculated for each trajectory, and here the mean over all trajectories is printed.
    In general, `sigma` should be smaller than `std`, as there is an additional error
    from the volume calculation.
+* `t=0.000` refers to the PFE estimate that is based on *all* samples without discarding
+   any high-energy outliers.
+* `t=_opt_` refers to the optimized threshold, which is determined by minimizing `sigma`.
 * `ln Z_est(t) - ln Z_exact`: the difference of the PFE estimate from the "exact" value,
   which is either the analytic value or the numeric value.
+* `Estar(t)`: the cutoff energy `E*` (mean and standard deviation over the
+  multiple iterations).
+* `cut%(t)`: the actual fraction of high-energy samples that were discarded; most
+  meaningful where `t=_opt_`.
 
 Additionally, each sampling iteration creates a subdirectory `out-0000` etc,
 containing the following files:
