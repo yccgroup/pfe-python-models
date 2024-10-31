@@ -163,7 +163,7 @@ def naive(Energy,beta,nbins):
     for i in range(ndim):
         dE = (bin_edges[i+1] - bin_edges[i])
         ene = (bin_edges[i+1] + bin_edges[i])/2
-        Z = dos[i] * np.exp(-beta*(ene-Emin)) * dE
+        Z += dos[i] * np.exp(-beta*(ene-Emin)) * dE
 
     lnZ = np.log(Z) - beta*Emin
     
