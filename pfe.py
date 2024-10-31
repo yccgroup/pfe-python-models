@@ -140,23 +140,32 @@ def omega2D(Traj,nbins):
 
 # Naive partition function calculator
 def naive(Energy,beta,nbins):
-    # shift energy for stability
+
     Emin = np.min(Energy)
-    Energy = Energy - Emin
-    # energy histogram
-    hist, bin_edges = np.histogram(Energy,bins=nbins,density=True)
-    
-    # calculate the density of state (DOS) and the partition function
+    Emax = np.max(Energy)
+
+    # reconstruct DOS from histogram h(E) = g(E) * exp(-beta*E)
+    hist, bin_edges = np.histogram(Energy,bins=nbins,density=False)
     ndim = len(hist)
+    dos = np.zeros(ndim)
     norm = 0
+    for i in range(ndim):
+        dE = (bin_edges[i+1] - bin_edges[i])
+        ene = (bin_edges[i+1] + bin_edges[i])/2
+        dos[i] = hist[i] * np.exp(beta*(ene-Emax))
+        norm += dos[i] * dE
+
+    # normalize DOS
+    dos = dos / norm
+
+    # calculate the partition function using DOS
     Z = 0
     for i in range(ndim):
+        dE = (bin_edges[i+1] - bin_edges[i])
         ene = (bin_edges[i+1] + bin_edges[i])/2
-        dos = hist[i] * (bin_edges[i+1] - bin_edges[i])
-        norm += dos
-        Z += dos * np.exp(-beta*ene)
+        Z = dos[i] * np.exp(-beta*(ene-Emin)) * dE
 
-    lnZ = np.log(Z/norm) - beta*Emin
-
+    lnZ = np.log(Z) - beta*Emin
+    
     return lnZ
 
