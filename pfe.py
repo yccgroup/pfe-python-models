@@ -84,18 +84,15 @@ def partfunc(Traj,Energy,beta,omegafunc,nbins=100,Estar=None):
             # For next iteration
             Estar_prev = Estar
 
-    # Recalculate after Estar is found. Also count how much has been cut off.
+    # Recalculate after Estar is found.
     H = np.ones(N)
-    ncut = 0
     for i in range(N):
         if Energy[i] > Estar:
             H[i] = 0
-            ncut += 1
-    # Calculate the Avg, Avg2, Error2 (Energy shifted), and cutoff fraction
+    # Calculate the Avg, Avg2 and Error2 (Energy shifted)
     Avg = np.mean(Func*H)
     Avg2 = np.mean(Func2*H)
     Err2 = (Avg2/Avg**2 - 1) / N
-    cutfrac = ncut / N
  
     # Truncate the trajectory based on Estar
     Trajstar = []
@@ -110,8 +107,9 @@ def partfunc(Traj,Energy,beta,omegafunc,nbins=100,Estar=None):
     lnZ = np.log(Omega) - np.log(Avg) - beta*Emax
 
     #print("lnZ:",lnZ,"Err:",np.sqrt(Err2),"E*:",Estar)
+    #print("Cutoff percentage:",(1-np.mean(H))*100)
 
-    return lnZ, Err2, Estar, cutfrac
+    return lnZ, Err2, Estar
 
 
 # 1D Omega calculation
@@ -135,4 +133,27 @@ def omega2D(Traj,nbins):
     dy = yedges[1] - yedges[0]
     Omega = np.count_nonzero(hist)*dx*dy
     return Omega
+
+
+# Naive partition function calculator
+def naive(Energy,beta,nbins):
+    # shift energy for stability
+    Emin = np.min(Energy)
+    Energy = Energy - Emin
+    # energy histogram
+    hist, bin_edges = np.histogram(Energy,bins=nbins,density=True)
+    
+    # calculate the density of state (DOS) and the partition function
+    ndim = len(hist)
+    norm = 0
+    Z = 0
+    for i in range(ndim):
+        ene = (bin_edges[i+1] + bin_edges[i])/2
+        dos = hist[i] * (bin_edges[i+1] - bin_edges[i])
+        norm += dos
+        Z += dos * np.exp(-beta*ene)
+
+    lnZ = np.log(Z/norm) - beta*Emin
+
+    return lnZ
 

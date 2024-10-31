@@ -110,8 +110,8 @@ def run_PFE(cfg, samples, Estar=None):
     elif isinstance(cfg.pot, potentials.PotentialFunction2D):
         omegafunc = pfe.omega2D
     nbins = cfg.getint('pfe', 'nbins')
-    lnZ,Err2lnZ,Estar,cutfrac = pfe.partfunc(samples.traj, samples.energies, cfg.beta, omegafunc, nbins, Estar)
-    return lnZ,Err2lnZ,Estar,cutfrac
+    lnZ,Err2lnZ,Estar = pfe.partfunc(samples.traj, samples.energies, cfg.beta, omegafunc, nbins, Estar)
+    return lnZ,Err2lnZ,Estar
 
 
 def run_exact(cfg):
@@ -128,4 +128,11 @@ def run_integral(cfg):
     dx = cfg.getfloat('integral', 'dx')
     Zint, lnZint = cfg.pot.partfunc_integral(hi, lo, dx, cfg.beta)
     return lnZint
+
+
+def run_naive(cfg, samples):
+    nbins = cfg.getint('pfe','naive')
+    lnZ = pfe.naive(samples.energies, cfg.beta, nbins)
+    return lnZ
+
 
