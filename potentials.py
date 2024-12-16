@@ -49,6 +49,9 @@ class Harmonic1D(PotentialFunction1D):
     def xinit(self):
         return self.x0
 
+    def dos(self, E):
+        return np.sqrt( 2.0 / (self.k * E) )
+
 
 class DW1D(PotentialFunction1D):
     # 1D double well potential
@@ -77,6 +80,13 @@ class SymDW1D(PotentialFunction1D):
 
     def xinit(self):
         return 0.0
+
+    def dos(self, E):
+        eps = E / self.h
+        g = 1/np.sqrt(eps*(1+np.sqrt(eps)))
+        if eps <= 1.0:
+            g += 1/np.sqrt(eps*(1-np.sqrt(eps)))
+        return (self.x0/(4*self.h)) * g
 
 
 class ASymDW1D(PotentialFunction1D):

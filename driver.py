@@ -132,9 +132,15 @@ def run_integral(cfg):
 
 def run_naive(cfg, samples):
     nbins = cfg.getint('pfe','naive')
-    lnZ = pfe.naive(samples.energies, cfg.beta, nbins)
+    wrdos = cfg.getboolean('meta', 'dos')
+    lnZ = pfe.naive(samples.energies, cfg.beta, nbins, wrdos)
     return lnZ
 
-def run_anados(cfg, samples):
-    lnZ = pfe.anados(cfg.pot.k, cfg.beta)
+
+def run_anados(cfg):
+    if not hasattr(cfg.pot, 'dos'):
+        return None
+    nbins = cfg.getint('dos', 'nbins')
+    dE    = cfg.getfloat('dos', 'dE')
+    lnZ = pfe.anados(cfg.pot, cfg.beta, nbins, dE)
     return lnZ

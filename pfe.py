@@ -139,7 +139,7 @@ def omega2D(Traj,nbins):
 
 
 # Naive partition function calculator
-def naive(Energy,beta,nbins):
+def naive(Energy,beta,nbins,wrdos):
 
     Emin = np.min(Energy)
     Emax = np.max(Energy)
@@ -170,12 +170,14 @@ def naive(Energy,beta,nbins):
     lnZ = np.log(Z) - beta*Emin
     
     # output density of states for comparison
-    np.savetxt("dos.dat",np.column_stack((histenergy, dos)))
+    if wrdos:
+        np.savetxt("numdos.dat",np.column_stack((histenergy, dos)))
 
     return lnZ
 
 
-def anados(k,beta,nbins=1000000,dE=0.00001):
+# analytic DoS (density of states)
+def anados(pot, beta, nbins, dE):
 
     # get the energy points
     dos = np.zeros(nbins)
@@ -186,13 +188,12 @@ def anados(k,beta,nbins=1000000,dE=0.00001):
     for i in range(nbins):
         ene = (i+0.5)*dE
         histenergy[i] = ene
-        dos[i] = np.sqrt(2/(k*ene))
+        dos[i] = pot.dos(ene)
         Z += dos[i] * np.exp(-beta*ene) * dE
 
     # output analytic dos
     np.savetxt("anados.dat",np.column_stack((histenergy, dos)))
 
     lnZ = np.log(Z)
-
     return lnZ
 

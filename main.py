@@ -88,10 +88,6 @@ def run_once(cfg, it):
     lnZnaive = driver.run_naive(cfg, samples)
     print("lnZ_naive:",lnZnaive) 
 
-    # calculate partition function via a summation over analytic dos
-    lnZanados = driver.run_anados(cfg, samples)
-    print("lnZ_anados:",lnZanados) 
-
 
     # estimate Z via PFE (optimizing Estar)
     N = samples.nsamples
@@ -162,6 +158,14 @@ if __name__ == '__main__':
         lnZexact = lnZint
     else:
         log(fd, f"ln Z_exact = {lnZexact}")
+
+    # calculate analytic DoS and Z from it, if requested
+    if cfg.getboolean('meta', 'dos'):
+        lnZanados = driver.run_anados(cfg)
+        if lnZanados is None:
+            log(fd, f"analytic DoS not available for this potential function")
+        else:
+            log(fd, f"ln Z_anados = {lnZanados}")
 
 
     # run sampling in parallel
