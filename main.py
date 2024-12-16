@@ -88,6 +88,11 @@ def run_once(cfg, it):
     lnZnaive = driver.run_naive(cfg, samples)
     print("lnZ_naive:",lnZnaive) 
 
+    # calculate partition function via a summation over analytic dos
+    lnZanados = driver.run_anados(cfg, samples)
+    print("lnZ_anados:",lnZanados) 
+
+
     # estimate Z via PFE (optimizing Estar)
     N = samples.nsamples
     lnZ,Err2lnZ,Estar,cutfrac = driver.run_PFE(cfg, samples)

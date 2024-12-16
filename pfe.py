@@ -148,6 +148,7 @@ def naive(Energy,beta,nbins):
     hist, bin_edges = np.histogram(Energy,bins=nbins,density=False)
     ndim = len(hist)
     dos = np.zeros(ndim)
+    histenergy = np.zeros(ndim)
     norm = 0
     for i in range(ndim):
         dE = (bin_edges[i+1] - bin_edges[i])
@@ -163,9 +164,35 @@ def naive(Energy,beta,nbins):
     for i in range(ndim):
         dE = (bin_edges[i+1] - bin_edges[i])
         ene = (bin_edges[i+1] + bin_edges[i])/2
+        histenergy[i] = ene
         Z += dos[i] * np.exp(-beta*(ene-Emin)) * dE
 
     lnZ = np.log(Z) - beta*Emin
     
+    # output density of states for comparison
+    np.savetxt("dos.dat",np.column_stack((histenergy, dos)))
+
+    return lnZ
+
+
+def anados(k,beta,nbins=1000000,dE=0.00001):
+
+    # get the energy points
+    dos = np.zeros(nbins)
+    histenergy = np.zeros(nbins)
+
+    # build analytic dos
+    Z = 0
+    for i in range(nbins):
+        ene = (i+0.5)*dE
+        histenergy[i] = ene
+        dos[i] = np.sqrt(2/(k*ene))
+        Z += dos[i] * np.exp(-beta*ene) * dE
+
+    # output analytic dos
+    np.savetxt("anados.dat",np.column_stack((histenergy, dos)))
+
+    lnZ = np.log(Z)
+
     return lnZ
 

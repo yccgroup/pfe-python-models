@@ -135,4 +135,6 @@ def run_naive(cfg, samples):
     lnZ = pfe.naive(samples.energies, cfg.beta, nbins)
     return lnZ
 
-
+def run_anados(cfg, samples):
+    lnZ = pfe.anados(cfg.pot.k, cfg.beta)
+    return lnZ
