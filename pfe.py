@@ -139,7 +139,7 @@ def omega2D(Traj,nbins):
 
 
 # Naive partition function calculator
-def naive(Energy,beta,nbins,wrdos):
+def naive(Energy,Omega,beta,nbins,wrdos):
 
     Emin = np.min(Energy)
     Emax = np.max(Energy)
@@ -154,10 +154,10 @@ def naive(Energy,beta,nbins,wrdos):
         dE = (bin_edges[i+1] - bin_edges[i])
         ene = (bin_edges[i+1] + bin_edges[i])/2
         dos[i] = hist[i] * np.exp(beta*(ene-Emax))
-        norm += dos[i] * dE
+        norm += dos[i]
 
-    # normalize DOS
-    dos = dos / norm
+    # normalize DOS: \int_E g(E) dE = \Omega, i.e \sum_i g(E_i) dE = \Omega
+    dos = Omega/dE * dos/norm
 
     # calculate the partition function using DOS
     Z = 0

@@ -131,9 +131,15 @@ def run_integral(cfg):
 
 
 def run_naive(cfg, samples):
+    if isinstance(cfg.pot, potentials.PotentialFunction1D):
+        omegafunc = pfe.omega1D
+    elif isinstance(cfg.pot, potentials.PotentialFunction2D):
+        omegafunc = pfe.omega2D
+    nbins = cfg.getint('pfe', 'nbins')
+    Omega = omegafunc(samples.traj, nbins)
     nbins = cfg.getint('pfe','naive')
     wrdos = cfg.getboolean('meta', 'dos')
-    lnZ = pfe.naive(samples.energies, cfg.beta, nbins, wrdos)
+    lnZ = pfe.naive(samples.energies, Omega, cfg.beta, nbins, wrdos)
     return lnZ
 
 
