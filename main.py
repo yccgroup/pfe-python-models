@@ -86,7 +86,7 @@ def run_once(cfg, it):
    
     # calculate partition function via a naive summation
     lnZnaive = driver.run_naive(cfg, samples)
-    print("lnZ_naive:",lnZnaive) 
+    log(fd, f"ln Z_naive = {lnZnaive}")
 
 
     # estimate Z via PFE (optimizing Estar)
@@ -113,7 +113,7 @@ def run_once(cfg, it):
 
     fd.close()
     os.chdir(origdir)
-    return (lnZs,ErrlnZs,Estars,cutfracs)
+    return (lnZs,ErrlnZs,Estars,cutfracs,lnZnaive)
 
 
 if __name__ == '__main__':
@@ -172,13 +172,17 @@ if __name__ == '__main__':
     pool = multiprocessing.Pool(nproc)
     data = pool.starmap(run_once, zip(itertools.repeat(cfg), range(nloop)), chunksize=1)
 
+    # output naive results
+    lnZnaives = [ lnZnaive for (lnZs,ErrlnZs,Estars,cutfracs,lnZnaive) in data ]
+    log(fd, f"ln Z_naive = {np.mean(lnZnaives)} ± {np.std(lnZnaives)}")
+
     # output PFE results
     thresholds = [None] + cfg.thresholds
     for i,threshold in enumerate(thresholds):
-        lnZest    = [ lnZs[i]     for (lnZs,ErrlnZs,Estars,cutfracs) in data ]
-        ErrlnZest = [ ErrlnZs[i]  for (lnZs,ErrlnZs,Estars,cutfracs) in data ]
-        Estars    = [ Estars[i]   for (lnZs,ErrlnZs,Estars,cutfracs) in data ]
-        cutfracs  = [ cutfracs[i] for (lnZs,ErrlnZs,Estars,cutfracs) in data ]
+        lnZest    = [ lnZs[i]     for (lnZs,ErrlnZs,Estars,cutfracs,lnZnaive) in data ]
+        ErrlnZest = [ ErrlnZs[i]  for (lnZs,ErrlnZs,Estars,cutfracs,lnZnaive) in data ]
+        Estars    = [ Estars[i]   for (lnZs,ErrlnZs,Estars,cutfracs,lnZnaive) in data ]
+        cutfracs  = [ cutfracs[i] for (lnZs,ErrlnZs,Estars,cutfracs,lnZnaive) in data ]
         if threshold is None:
             tag = '_opt_'
         else:
